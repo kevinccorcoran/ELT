@@ -1,1 +1,1 @@
-qww 
+select * from qwe
