@@ -1,1 +1,4 @@
-select * from qwe
+select
+    test,
+    test_1
+from qwe
