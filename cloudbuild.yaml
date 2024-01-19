@@ -1,6 +1,7 @@
 steps:
 - name: 'gcr.io/cloud-builders/docker'
-  args: ['build', '-t', 'gcr.io/buildpacks/google-22', '.']
+  args: ['build', '-t', 'gcr.io/buildpacks/builder:google-22', '.']
 images:
-- 'gcr.io/buildpacks/google-22'
+- 'gcr.io/buildpacks/builder:google-22'
+
 
