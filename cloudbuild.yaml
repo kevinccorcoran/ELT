@@ -4,9 +4,3 @@ steps:
 images:
 - 'gcr.io/buildpacks/builder:google-22'
 
-# steps:
-# - name: gcr.io/cloud-builders/docker
-#   args: ['build', '-t', 'gcr.io/buildpacks/builder:google-22', '.']
-
-# - name: gcr.io/cloud-builders/gcloud
-#   args: ['functions', 'deploy', 'my-function', '--entry-point', 'my-entry-point', '--runtime', 'python3.11', '--source', '.']
