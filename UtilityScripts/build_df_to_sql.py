@@ -48,8 +48,8 @@ try:
     print(result)
 
     engine = create_engine('postgresql://postgres:9356@localhost:5433/QA')
-    result.to_sql('HISTORICAL_DAILY_MASTER_STAGING', engine,
-                  if_exists='replace', schema='STATS')
+    result.to_sql('historical_daily_master_staging', engine,
+                  if_exists='replace', schema='stats')
 
 
 except Exception as e:
