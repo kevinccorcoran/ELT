@@ -47,4 +47,4 @@ if __name__ == "__main__":
         print(result_df)
         save_to_database(result_df, table_name, connection_string)
     except Exception as e:
-        logging.exception("Unexpected error occurred")
+      logging.exception("Unexpected error occurred")
