@@ -1,7 +1,7 @@
+import os
 import pandas as pd
 import yfinance as yf
 from sqlalchemy import create_engine
-
 import logging 
 
 # Configure logging
@@ -40,7 +40,8 @@ def save_to_database(df, table_name, connection_string):
 if __name__ == "__main__":
     tickers = ['^GSPC','ME']  # Example ticker
     table_name = 'historical_daily_master'
-    connection_string = 'postgresql://postgres:9356@localhost:5433/cp'
+    #connection_string = 'postgresql://postgres:9356@localhost:5433/cp'
+    connection_string = os.getenv('DB_CONNECTION_STRING')
     
     try:
         result_df = build_df(tickers)
