@@ -19,6 +19,7 @@
 """
 Example usage of the TriggerDagRunOperator. This example holds 2 DAGs:
 1. 1st DAG (example_trigger_controller_dag) holds a TriggerDagRunOperator, which will trigger the 2nd DAG
+
 2. 2nd DAG (example_trigger_target_dag) which will be triggered by the TriggerDagRunOperator in the 1st DAG
 """
 import pendulum
@@ -40,9 +41,19 @@ def run_this_func(dag_run=None):
 
 
 with DAG(
-    dag_id="example_trigger_target_dag",
+    dag_id="a_example_trigger_target_dag_kc",
     start_date=pendulum.datetime(2021, 1, 1, tz="UTC"),
     catchup=False,
+    schedule_interval=None,
+    tags=['example'],
+) as dag:
+    run_this = run_this_func()
+
+    bash_task = BashOperator(
+        task_id="bash_task",
+        bash_command='echo "Here is the message: $message"',
+        env={'message': '{{ dag_run.conf.get("message") }}'},
+    )
     schedule_interval=None,
     tags=['example'],
 ) as dag:
