@@ -1,37 +1,66 @@
-from datetime import datetime
-from airflow import DAG
-from airflow.providers.postgres.operators.postgres import PostgresOperator
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
 
-# Define the default_args dictionary
-default_args = {
-    'owner': 'airflow',
-    'depends_on_past': False,
-    'email_on_failure': False,
-    'email_on_retry': False,
-    'retries': 1,
-}
-
-# Define the DAG
-dag = DAG(
-    'update_downstream_table',
-    default_args=default_args,
-    description='A DAG to run an SQL insert statement on a downstream table',
-    schedule_interval=None,  # Set to None for manual triggering
-    start_date=datetime(2024, 1, 1),
-    catchup=False,
-)
-
-# Define the SQL query to be executed
-sql_query = """
-INSERT INTO downstream_table (column1, column2)
-SELECT column1, column2 FROM upstream_table
-WHERE condition = 'True';
 """
+Example usage of the TriggerDagRunOperator. This example holds 2 DAGs:
+1. 1st DAG (example_trigger_controller_dag) holds a TriggerDagRunOperator, which will trigger the 2nd DAG
 
-# Define the task
-update_downstream_table_task = PostgresOperator(
-    task_id='update_downstream_table',
-    postgres_conn_id='your_postgres_connection_id',
-    sql=sql_query,
-    dag=dag,
-)
+2. 2nd DAG (example_trigger_target_dag) which will be triggered by the TriggerDagRunOperator in the 1st DAG
+"""
+import pendulum
+
+from airflow import DAG
+from airflow.decorators import task
+from airflow.operators.bash import BashOperator
+
+
+@task(task_id="run_this")
+def run_this_func(dag_run=None):
+    """
+    Print the payload "message" passed to the DagRun conf attribute.
+
+    :param dag_run: The DagRun object
+    :type dag_run: DagRun
+    """
+    print(f"Remotely received value of {dag_run.conf.get('message')} for key=message")
+
+
+with DAG(
+    dag_id="a_example_trigger_target_dag_kc",
+    start_date=pendulum.datetime(2021, 1, 1, tz="UTC"),
+    catchup=False,
+    schedule_interval=None,
+    tags=['example'],
+) as dag:
+    run_this = run_this_func()
+
+    bash_task = BashOperator(
+        task_id="bash_task",
+        bash_command='echo "Here is the message: $message"',
+        env={'message': '{{ dag_run.conf.get("message") }}'},
+    )
+    schedule_interval=None,
+    tags=['example'],
+) as dag:
+    run_this = run_this_func()
+
+    bash_task = BashOperator(
+        task_id="bash_task",
+        bash_command='echo "Here is the message: $message"',
+        env={'message': '{{ dag_run.conf.get("message") }}'},
+    )
