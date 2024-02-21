@@ -1,7 +1,7 @@
 DROP TABLE IF EXISTS cdm.pure_growth;
 
 -- Create table
-CREATE TABLE raw.historical_daily_master (
+CREATE TABLE cdm.pure_growth (
     date TEXT,
     open TEXT,
     high TEXT,
