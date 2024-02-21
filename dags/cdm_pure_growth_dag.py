@@ -1,15 +1,20 @@
-import datetime
-import os
-import pendulum
 from airflow import DAG
 from airflow.providers.postgres.operators.postgres import PostgresOperator
+from airflow.utils.dates import days_ago
 
 with DAG(
     dag_id="cdm_pure_growth_dag",
-    start_date=pendulum.datetime(2021, 1, 1, tz="UTC"),
+    start_date=days_ago(1),
     schedule_interval=None,
     catchup=False,
 ) as dag:
+
+    # Test connection task
+    test_connection = PostgresOperator(
+        task_id='test_connection',
+        postgres_conn_id='postgres_default',
+        sql="SELECT  1",
+    )
 
     # Other tasks...
 
@@ -24,4 +29,4 @@ with DAG(
     )
 
     # Define task dependencies if any
-    # e.g., some_previous_task >> insert_into_pure_growth
+    test_connection >> insert_into_pure_growth
