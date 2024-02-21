@@ -15,7 +15,7 @@ with DAG(
 
     insert_into_pure_growth = PostgresOperator(
         task_id='insert_into_pure_growth',
-        postgres_conn_id='your_postgres_connection_id',
+        postgres_conn_id='postgres_default',
         sql="""
             INSERT INTO cdm.pure_growth (date, open, high, low, close, adj_close, volume, processed_at)
             SELECT date, open, high, low, close, adj_close, volume, processed_at
