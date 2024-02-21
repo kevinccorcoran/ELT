@@ -1,8 +1,8 @@
 -- Drop the table if it already exists
-DROP TABLE IF EXISTS raw.historical_daily_master;
+DROP TABLE IF EXISTS raw.historical_daily_main;
 
 -- Create table
-CREATE TABLE raw.historical_daily_master (
+CREATE TABLE raw.historical_daily_main (
     date TEXT,
     open TEXT,
     high TEXT,

@@ -44,7 +44,7 @@ def save_to_database(df, table_name, connection_string):
 
 if __name__ == "__main__":
     tickers = ['^GSPC', 'MSFT']  # Example tickers
-    table_name = 'historical_daily_master'
+    table_name = 'historical_daily_main'
     connection_string = os.getenv('DB_CONNECTION_STRING')
 
     try:
