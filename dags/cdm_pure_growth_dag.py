@@ -1,36 +1,27 @@
-"""
-Example usage of the TriggerDagRunOperator. This example holds 2 DAGs:
-1. 1st DAG (example_trigger_controller_dag) holds a TriggerDagRunOperator, which will trigger the 2nd DAG
-
-2. 2nd DAG (example_trigger_target_dag) which will be triggered by the TriggerDagRunOperator in the 1st DAG
-"""
+import datetime
+import os
 import pendulum
-
 from airflow import DAG
-from airflow.decorators import task
-from airflow.operators.bash import BashOperator
-
-@task(task_id="run_this")
-def run_this_func(dag_run=None):
-    """
-    Print the payload "message" passed to the DagRun conf attribute.
-
-    :param dag_run: The DagRun object
-    :type dag_run: DagRun
-    """
-    print(f"Remotely received value of {dag_run.conf.get('message')} for key=message")
+from airflow.providers.postgres.operators.postgres import PostgresOperator
 
 with DAG(
-    dag_id="a_example_trigger_target_dag_kc",
+    dag_id="cdm_pure_growth_dag",
     start_date=pendulum.datetime(2021, 1, 1, tz="UTC"),
-    catchup=False,
     schedule_interval=None,
-    tags=['example'],
+    catchup=False,
 ) as dag:
-    run_this = run_this_func()
 
-    bash_task = BashOperator(
-        task_id="bash_task",
-        bash_command='echo "Here is the message: $message"',
-        env={'message': '{{ dag_run.conf.get("message") }}'},
+    # Other tasks...
+
+    insert_into_pure_growth = PostgresOperator(
+        task_id='insert_into_pure_growth',
+        postgres_conn_id='your_postgres_connection_id',
+        sql="""
+            INSERT INTO cdm.pure_growth (date, open, high, low, close, adj_close, volume, processed_at)
+            SELECT date, open, high, low, close, adj_close, volume, processed_at
+            FROM raw.historical_daily_main;
+        """,
     )
+
+    # Define task dependencies if any
+    # e.g., some_previous_task >> insert_into_pure_growth
