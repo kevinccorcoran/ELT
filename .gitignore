@@ -1,5 +1,32 @@
 # Python cache files
 __pycache__/
 *.pyc
-# 
+
+# Dependency directories
+node_modules/
+vendor/
+
+# Compiled source
+*.com
+*.class
+*.dll
+*.exe
+*.o
+*.so
+
+# Builds
+/dist
+
+# Logs and diagnostics
+*.log
+*.diag
+
+# OS generated files
 .DS_Store
+Thumbs.db
+
+# Editor directories and files
+.idea/
+.vscode/
+*.swp
+*~
