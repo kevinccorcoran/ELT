@@ -3,7 +3,8 @@ import pandas as pd
 import yfinance as yf
 from sqlalchemy import create_engine
 import logging
-from datetime import datetime  # Import the datetime module
+from datetime import datetime
+import adbc_driver_postgresql.dbapi as pg_dbapi
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -21,13 +22,13 @@ def build_df(tickers):
                 'Adj Close': 'adj_close',
                 'Volume': 'volume'
             }, inplace=True)
-            dx['ticker'] = ticker  # Add ticker column to the DataFrame
+            dx['ticker'] = ticker
             if df.empty:
                 df = dx
             else:
-                df = pd.concat([df, dx])
-        df.reset_index(inplace=True)  # Reset index to make 'Date' a column
-        df.rename(columns={'Date': 'date'}, inplace=True)  # Rename 'Date' column to 'date'
+                df = pd.concat([df, dx], sort=False)
+        df.reset_index(inplace=True)
+        df.rename(columns={'Date': 'date'}, inplace=True)
         return df
     except Exception as e:
         logging.exception("Error building DataFrame")
@@ -35,21 +36,21 @@ def build_df(tickers):
 
 def save_to_database(df, table_name, connection_string):
     try:
-        engine = create_engine(connection_string)
-        df['processed_at'] = datetime.now()  # Add processed_at column with the current timestamp
-        df.to_sql(table_name, engine, if_exists='replace', schema='raw', index=False)
+        with pg_dbapi.connect(connection_string) as conn:
+            df['processed_at'] = datetime.now()
+            df.to_sql(table_name, conn, if_exists='replace', schema='raw', index=False)
         logging.info(f"Data successfully saved to {table_name}")
     except Exception as e:
         logging.exception("Failed to save data to database")
 
 if __name__ == "__main__":
-    tickers = ['^GSPC', 'MSFT']  # Example tickers
+    tickers = ['^GSPC', 'MSFT']
     table_name = 'historical_daily_main'
-    connection_string = os.getenv('DB_CONNECTION_STRING')
+    connection_string = 'postgresql://postgres:9356@localhost:5433/DEV'
 
     try:
         result_df = build_df(tickers)
-        print(result_df)
+        print(result_df.head())
         save_to_database(result_df, table_name, connection_string)
     except Exception as e:
         logging.exception("Unexpected error occurred")
