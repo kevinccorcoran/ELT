@@ -19,6 +19,18 @@ seed-paths: ["seeds"]
 macro-paths: ["macros"]
 snapshot-paths: ["snapshots"]
 
+models:
+  dbt_project: # This should match the `name` key at the top of your dbt_project.yml
+    # Exclude models in the 'example' directory
+    example:
+      enabled: false
+models:
+  dbt_project: # This should match the `name` key at the top of your dbt_project.yml
+    # Exclude models in the 'example' directory
+    cdm:
+      enabled: false
+
+
 clean-targets:         # directories to be removed by `dbt clean`
   - "target"
   - "dbt_packages"
@@ -31,7 +43,21 @@ clean-targets:         # directories to be removed by `dbt clean`
 # directory as views. These settings can be overridden in the individual model
 # files using the `{{ config(...) }}` macro.
 models:
-  dbt_project:
+  dbt:
     # Config indicated by + and applies to all files under models/example/
     example:
       +materialized: view
+
+# In dbt_project.yml or model SQL files
+models:
+  dbt_project:
+    example:
+      tags: ["exclude"]
+
+# dbt configuration
+models:
+  dbt_project:  # Replace 'my_project_name' with your actual project name
+    raw:
+      +schema: raw  # This sets the schema for models in the 'raw' directory
+    cdm:
+      +schema: cdm  # This sets the schema for models in the 'cdm' directory
