@@ -1,0 +1,17 @@
+# version: 2
+
+# sources:
+#   - name: raw  # The name of the source
+#     schema: raw  # The name of the schema in your database
+#     tables:
+#       - name: historical_daily_main
+
+
+version: 2
+
+sources:
+  - name: raw
+    database: DEV
+    schema: raw 
+    tables:
+      - name: historical_daily_main
