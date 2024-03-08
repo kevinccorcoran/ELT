@@ -50,7 +50,7 @@ def save_to_database(df, table_name, connection_string):
 
 
 if __name__ == "__main__":
-    tickers = ['^GSPC', 'MSFT']
+    tickers = ['^GSPC', 'MSFT','X']
     table_name = 'historical_daily_main'
     
     # Retrieve connection string from environment variables
