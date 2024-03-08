@@ -1,4 +1,5 @@
 from airflow import DAG
+from airflow.operators.bash_operator import BashOperator  # Import BashOperator
 from airflow.providers.postgres.operators.postgres import PostgresOperator
 from airflow.utils.dates import days_ago
 
@@ -12,7 +13,7 @@ default_args = {
 }
 
 with DAG(
-    dag_id="cdm_pure_growth_dag",
+    dag_id="a_test_dag",
     description="A DAG for processing pure growth data with Postgres",
     default_args=default_args,
     start_date=days_ago(1),
@@ -28,16 +29,11 @@ with DAG(
         sql="SELECT 1;",
     )
 
-    # Task to insert data into the pure_growth table
-    insert_into_pure_growth = PostgresOperator(
-        task_id='insert_into_pure_growth',
-        postgres_conn_id='postgres_default',
-        sql="""
-            INSERT INTO cdm.pure_growth (date, ticker, open, high, low, close, adj_close, volume, processed_at)
-            SELECT date, ticker, open, high, low, close, adj_close, volume, processed_at
-            FROM raw.historical_daily_main;
-        """,
+    # Define a BashOperator task to run a DBT command or any bash command
+    dbt_run = BashOperator(
+    task_id='dbt_run',
+    bash_command='cd /Users/kevin/Dropbox/applications/ELT/dbt/src/app/ && dbt run --models historical_daily_main',
     )
 
     # Set task dependencies
-    test_connection >> insert_into_pure_growth
+    test_connection >> dbt_run  # This means dbt_run will execute after test_connection has succeeded

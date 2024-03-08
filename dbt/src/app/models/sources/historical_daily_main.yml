@@ -11,7 +11,7 @@ version: 2
 
 sources:
   - name: raw
-    database: DEV
+    database:
     schema: raw 
     tables:
       - name: historical_daily_main

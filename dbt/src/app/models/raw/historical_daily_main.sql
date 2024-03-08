@@ -10,16 +10,19 @@
 
 with historical_daily_main as (
 
-    SELECT
+    select
+
+
         date,
-        open ,
-        high ,
-        low ,
-        close ,
-        adj_close ,
-        volume ,
-        processed_at 
-    FROM "raw".HISTORICAL_DAILY_MAIN
+        volume::bigint as volume,
+        processed_at::date as processed_at,
+        REGEXP_REPLACE(ticker, '[^A-Za-z]', '', 'g') as ticker,
+        ROUND(open::numeric, 2) as open,
+        ROUND(high::numeric, 2) as high,
+        ROUND(low::numeric, 2) as low,
+        ROUND(close::numeric, 2) as close,
+        ROUND(adj_close::numeric, 2) as adj_close
+    from "raw".historical_daily_main
 
 )
 

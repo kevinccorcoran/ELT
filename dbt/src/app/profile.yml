@@ -9,4 +9,5 @@ my_project:
       user: postgres
       pass: 9356
       dbname: DEV
-      schema: raw
+      schema: cdm
+
