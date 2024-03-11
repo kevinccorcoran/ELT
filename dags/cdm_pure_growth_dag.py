@@ -8,7 +8,7 @@ from airflow.operators.dagrun_operator import TriggerDagRunOperator
 from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
 import pendulum  # For handling dates
 
-# Define the default arguments for the DAG
+# Define the default arguments for the DAG 
 default_args = {
     'owner': 'airflow',
     'depends_on_past': False,
@@ -52,6 +52,5 @@ with DAG(
         bash_command='cd /Users/kevin/Dropbox/applications/ELT/dbt/src/app/ && dbt run --models pure_growth',
     )
    
-
     # Set task dependencies
     test_connection >> dbt_run
