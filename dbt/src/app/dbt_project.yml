@@ -1,9 +1,17 @@
+
+# Name your project! Project names should contain only lowercase characters
+# and underscores. A good package name should reflect your organization's
+# name or the intended use of these models
 name: 'dbt_project'
 version: '1.0.0'
 config-version: 2
 
+# This setting configures which "profile" dbt uses for this project.
 profile: 'dbt_project'
 
+# These configurations specify where dbt should look for different types of files.
+# The `model-paths` config, for example, states that models in this project can be
+# found in the "models/" directory. You probably won't need to change these!
 model-paths: ["models"]
 analysis-paths: ["analyses"]
 test-paths: ["tests"]
@@ -11,21 +19,43 @@ seed-paths: ["seeds"]
 macro-paths: ["macros"]
 snapshot-paths: ["snapshots"]
 
-# Define models configuration
 models:
-  dbt_project: # This matches the `name` key at the top
-    # Specific configurations for models in the 'raw' directory
-    raw:
-      +schema: 'raw'
-      # Any additional configurations for 'raw' models go here
-    # Specific configurations for models in the 'cdm' directory
-    cdm:
-      +schema: 'cdm'
-      # Any additional configurations for 'cdm' models go here
-    # Example directory is disabled, assuming you still want that
+  dbt_project: # This should match the `name` key at the top of your dbt_project.yml
+    # Exclude models in the 'example' directory
     example:
       enabled: false
+models:
+  dbt_project: # This should match the `name` key at the top of your dbt_project.yml
+    # Exclude models in the 'example' directory
+    cdm:
+      enabled: false
 
-clean-targets:
+
+clean-targets:         # directories to be removed by `dbt clean`
   - "target"
   - "dbt_packages"
+
+
+# Configuring models
+# Full documentation: https://docs.getdbt.com/docs/configuring-models
+
+# In this example config, we tell dbt to build all models in the example/
+# directory as views. These settings can be overridden in the individual model
+# files using the `{{ config(...) }}` macro.
+models:
+  dbt:
+    # Config indicated by + and applies to all files under models/example/
+    example:
+      +materialized: view
+
+# In dbt_project.yml or model SQL files
+models:
+  dbt_project:
+    example:
+      tags: ["exclude"]
+
+# dbt configuration
+models:
+  my_project:
+    +schema: cdm
+
