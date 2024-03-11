@@ -28,7 +28,6 @@ WITH base AS (
 index_base AS (
     SELECT * 
     FROM base 
-    WHERE ticker = 'GSPC'
 ),
 
 -- Select the earliest date record for each ticker excluding the baseline.
