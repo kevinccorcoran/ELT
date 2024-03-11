@@ -49,7 +49,7 @@ with DAG(
     # Task to run a DBT command or any bash command
     dbt_run = BashOperator(
         task_id='dbt_run',
-        bash_command='cd /Users/kevin/Dropbox/applications/ELT/dbt/src/app/models/cdm/ && dbt run --models pure_growth',
+        bash_command='cd /Users/kevin/Dropbox/applications/ELT/dbt/src/app/ && dbt run --models pure_growth',
     )
    
 
