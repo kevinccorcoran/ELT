@@ -11,8 +11,16 @@
 with historical_daily_main as (
 
     select
-        *
-    from "raw".historical_daily_main
+        date(date) AS date,
+        volume::bigint as volume,
+        processed_at::date as processed_at,
+        REGEXP_REPLACE(ticker, '[^A-Za-z]', '', 'g') as ticker,
+        ROUND(open::numeric, 2) as open,
+        ROUND(high::numeric, 2) as high,
+        ROUND(low::numeric, 2) as low,
+        ROUND(close::numeric, 2) as close,
+        ROUND(adj_close::numeric, 2) as adj_close
+    from {{ source('raw', 'historical_daily_main') }}
 
 )
 

@@ -33,11 +33,11 @@ run_python_script = BashOperator(
 )
 
 # Task to trigger cdm_pure_growth_dag
-trigger_cdm_pure_growth_dag = TriggerDagRunOperator(
-    task_id='trigger_cdm_pure_growth_dag',
-    trigger_dag_id="cdm_pure_growth_dag", # The ID of the DAG to trigger
-    dag=dag,
+trigger_cdm_historical_daily_main_clean_dag = TriggerDagRunOperator(
+    task_id='trigger_cdm_historical_daily_main_clean_dag',
+    trigger_dag_id="cdm_historical_daily_main_clean_dag", # The ID of the DAG to trigger
+    dag=dag, 
 )
 
 # Set task dependencies
-run_python_script >> trigger_cdm_pure_growth_dag
+run_python_script >> trigger_cdm_historical_daily_main_clean_dag
