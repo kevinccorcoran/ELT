@@ -1,0 +1,1 @@
+'AAPL', 'MSFT', 'GOOGL', 'AMZN', 'FB', 'BRK.B', 'JNJ', 'JPM', 'V', 'WMT', 'PG', 'MA', 'INTC', 'DIS', 'HD', 'XOM', 'CVX', 'VZ', 'BA', 'UNH'
