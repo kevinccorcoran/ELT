@@ -8,24 +8,24 @@
 
 {{ config(materialized='table') }}
 
-with historical_daily_main as (
-
-    select
-        date(date) AS date,
-        volume::bigint as volume,
-        processed_at::date as processed_at,
-        REGEXP_REPLACE(ticker, '[^A-Za-z]', '', 'g') as ticker,
-        ROUND(open::numeric, 2) as open,
-        ROUND(high::numeric, 2) as high,
-        ROUND(low::numeric, 2) as low,
-        ROUND(close::numeric, 2) as close,
-        ROUND(adj_close::numeric, 2) as adj_close
-    from {{ source('raw', 'historical_daily_main') }}
-
+WITH historical_daily_main AS (
+    SELECT
+        volume::bigint AS volume,
+        processed_at::date AS processed_at,
+        DATE(date) AS date,
+        REGEXP_REPLACE(ticker, '[^A-Za-z]', '', 'g') AS ticker,
+        CASE
+            WHEN open <> 0 THEN ROUND(open::numeric, 2)
+			WHEN open = 0 THEN ROUND((high::numeric + low::numeric) / 2, 2)
+        END AS open,
+        ROUND(high::numeric, 2) AS high,
+        ROUND(low::numeric, 2) AS low,
+        ROUND(close::numeric, 2) AS close,
+        ROUND(adj_close::numeric, 2) AS adj_close
+    FROM {{ source('raw', 'historical_daily_main') }}
 )
 
-select *
-from historical_daily_main
+SELECT * FROM historical_daily_main
 
 /*
     Uncomment the line below to remove records with null `id` values
