@@ -7,6 +7,9 @@ from airflow.operators.dagrun_operator import TriggerDagRunOperator
 # New import for SQLExecuteQueryOperator
 from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
 import pendulum  # For handling dates
+from airflow.operators.python import PythonOperator
+#from pytest_tests import run_tests
+
 
 # Define the default arguments for the DAG 
 default_args = {
@@ -42,6 +45,13 @@ with DAG(
         bash_command='cd /Users/kevin/Dropbox/applications/ELT/dbt/src/app/ && dbt run --models historical_daily_main_clean',
     )
 
+    # Task to run the Python script
+    run_python_script = BashOperator(
+        task_id='run_python_script',
+        bash_command='pytest /Users/kevin/Dropbox/applications/ELT/pytest_tests/run_tests.py || true',
+        dag=dag,
+)
+
     # Task to trigger cdm_pure_growth_dag
     trigger_cdm_pure_growth_dag = TriggerDagRunOperator(
         task_id='trigger_cdm_pure_growth_dag',
@@ -50,4 +60,4 @@ with DAG(
 )
    
     # Set task dependencies
-    test_connection >> dbt_run >> trigger_cdm_pure_growth_dag
+    test_connection >> dbt_run >> run_python_script >> trigger_cdm_pure_growth_dag
