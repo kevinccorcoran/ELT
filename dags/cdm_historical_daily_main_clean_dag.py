@@ -48,9 +48,15 @@ with DAG(
     # Task to run the Python script
     run_python_script = BashOperator(
         task_id='run_python_script',
-        bash_command='pytest /Users/kevin/Dropbox/applications/ELT/pytest_tests/run_tests.py || true',
+        bash_command='pytest /Users/kevin/Dropbox/applications/ELT/pytest_tests/ || true',
         dag=dag,
 )
+
+# Task to run a DBT command or any bash command
+    dbt_run_udi = BashOperator(
+        task_id='dbt_run_udi',
+        bash_command='cd /Users/kevin/Dropbox/applications/ELT/dbt/src/app/ && dbt run --models user_data_integrity',
+    )
 
     # Task to trigger cdm_pure_growth_dag
     trigger_cdm_pure_growth_dag = TriggerDagRunOperator(
@@ -60,4 +66,4 @@ with DAG(
 )
    
     # Set task dependencies
-    test_connection >> dbt_run >> run_python_script >> trigger_cdm_pure_growth_dag
+    test_connection >> dbt_run >> run_python_script >> dbt_run_udi >> trigger_cdm_pure_growth_dag

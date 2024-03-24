@@ -19,9 +19,6 @@ snapshot-paths: ["snapshots"]
 # Model Configuration
 models:
  dbt_project:
-    # Exclude models in the 'example' directory
-    example:
-      enabled: false
     # Configuration for models in the 'cdm' directory
     cdm:
       enabled: true
@@ -31,6 +28,11 @@ models:
     raw:
       enabled: true
       # Materialization strategy for models in the 'raw' directory
+      +materialized: table
+    # Configuration for models in the 'quality_checks' directory
+    quality_checks:
+      schema: quality_checks # sets the default schema for this namespace
+      # Materialization strategy for models in the 'quality_checks' directory
       +materialized: table
 
 # Clean Targets Configuration
