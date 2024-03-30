@@ -1,8 +1,12 @@
-from airflow import DAG
-from airflow.operators.bash_operator import BashOperator
-from airflow.utils.dates import days_ago
+# Standard library imports
 from datetime import timedelta
-from airflow.operators.dagrun_operator import TriggerDagRunOperator # Import TriggerDagRunOperator
+
+# Related third-party imports
+from airflow import DAG
+from airflow.operators.bash import BashOperator
+from airflow.operators.trigger_dagrun import TriggerDagRunOperator
+from airflow.utils.dates import days_ago
+
 
 # Define the default arguments for the DAG
 default_args = {
@@ -19,20 +23,20 @@ default_args = {
 dag = DAG(
     dag_id="build_df_to_sql_dag",
     default_args=default_args,
-    description="DAG to run a Python script",
-    schedule_interval="0 9 * * *", # Run daily at 10 AM
+    description="DAG to run Python script to update raw.historical_daily_main",
+    schedule_interval="0 23 * * *", # Run daily at 9 AM UTC
     catchup=False,
-    tags=['example', 'python_script'],
+    tags=['yfinance', 'raw_data', 'build_df_to_sql'],
 )
 
 # Task to run the Python script
-run_python_script = BashOperator(
-    task_id='run_python_script',
+run_build_df_to_sql_py = BashOperator(
+    task_id='run_build_df_to_sql.py',
     bash_command='python3 /Users/kevin/Dropbox/applications/ELT/UtilityScripts/build_df_to_sql.py ',
     dag=dag,
 )
 
-# Task to trigger cdm_pure_growth_dag
+# Task to trigger cdm_historical_daily_main_clean_dag
 trigger_cdm_historical_daily_main_clean_dag = TriggerDagRunOperator(
     task_id='trigger_cdm_historical_daily_main_clean_dag',
     trigger_dag_id="cdm_historical_daily_main_clean_dag", # The ID of the DAG to trigger
@@ -40,4 +44,4 @@ trigger_cdm_historical_daily_main_clean_dag = TriggerDagRunOperator(
 )
 
 # Set task dependencies
-run_python_script >> trigger_cdm_historical_daily_main_clean_dag
+run_build_df_to_sql_py >> trigger_cdm_historical_daily_main_clean_dag

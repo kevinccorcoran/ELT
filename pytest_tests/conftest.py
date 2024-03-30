@@ -1,43 +1,28 @@
-# import pytest
-# from send_notification import send_notification
-
-# @pytest.hookimpl(tryfirst=True, hookwrapper=True)
-# def pytest_runtest_makereport(item, call):
-#     outcome = yield
-#     report = outcome.get_result()
-#     if report.when == 'call' and report.failed:
-#         send_notification(f"Test Failed: {item.name}")
-
+# Standard library imports
 import os
-import requests
-from dotenv import load_dotenv
+
+# Related third-party imports
 import pytest
+import requests
+import toml
 
+def load_config():
+    # Get the directory of the current file (conftest.py)
+    dir_path = os.path.dirname(os.path.abspath(__file__))
+    # Construct the absolute path to config.toml
+    config_path = os.path.join(dir_path, 'config.toml')
+    with open(config_path, 'r') as config_file:
+        config = toml.load(config_file)
+    return config
 
-# Load environment variables from .env file
-# Adjust the path to where your .env file is located
-load_dotenv('/Users/kevin/Dropbox/applications/ELT/.env.py')
+matrix_config = load_config().get('matrix', {})
 
 def send_notification(message):
-    # Get the environment variables
-    room_id = os.getenv('ROOM_ID')  # Access the ROOM_ID environment variable
-    access_token = os.getenv('ACCESS_TOKEN')  # Access the ACCESS_TOKEN environment variable
-
-    # Check if environment variables are set
-    if room_id is None or access_token is None:
-        print("ROOM_ID or ACCESS_TOKEN is not set. Please check your .env file.")
-        return
-    
-    # Construct the request URL
-    url = f"https://matrix.org/_matrix/client/r0/rooms/{room_id}/send/m.room.message?access_token={access_token}"
-    data = {
-        "msgtype": "m.text",
-        "body": message,
-    }
-    # Send the POST request
+    url = matrix_config['url']
+    data = {"msgtype": "m.text", "body": message}
     response = requests.post(url, json=data)
     if response.status_code != 200:
-        print("Failed to send notification")
+        print(f"Failed to send notification: {response.text}")
 
 # Send notification to Element
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)

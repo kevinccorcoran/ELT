@@ -1,12 +1,14 @@
+# Standard library imports
 from datetime import timedelta
+
+# Related third-party imports
 from airflow import DAG
-# Updated import paths for ExternalTaskSensor and BashOperator
-from airflow.sensors.external_task import ExternalTaskSensor
 from airflow.operators.bash import BashOperator
-from airflow.operators.dagrun_operator import TriggerDagRunOperator
-# New import for SQLExecuteQueryOperator
+from airflow.operators.trigger_dagrun import TriggerDagRunOperator
 from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
+from airflow.sensors.external_task import ExternalTaskSensor
 import pendulum  # For handling dates
+
 
 # Define the default arguments for the DAG 
 default_args = {
@@ -28,16 +30,6 @@ with DAG(
     catchup=False,
     tags=['example', 'postgres'],
 ) as dag:
-
-    # Wait for build_df_to_sql_dag.py to complete
-    # wait_for_build_df_to_sql = ExternalTaskSensor(
-    #     task_id='wait_for_build_df_to_sql',
-    #     external_dag_id='build_df_to_sql_dag',
-    #     external_task_id=None,
-    #     mode='reschedule',
-    #     poke_interval=10,  # Checks every 60 seconds; adjust based on your needs
-    #     timeout=20,  # Increased timeout to 10 minutes
-    # )
 
     # Task to test the database connection, updated to use SQLExecuteQueryOperator
     test_connection = SQLExecuteQueryOperator(
