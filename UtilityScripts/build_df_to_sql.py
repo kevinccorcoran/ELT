@@ -1,12 +1,13 @@
+# Standard library imports
+from datetime import datetime
+import logging
 import os
+
+# Related third-party imports
+import adbc_driver_postgresql.dbapi as pg_dbapi
+from sqlalchemy import create_engine
 import pandas as pd
 import yfinance as yf
-from sqlalchemy import create_engine
-import logging
-from datetime import datetime
-import adbc_driver_postgresql.dbapi as pg_dbapi
-
-
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
