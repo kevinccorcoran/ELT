@@ -1,10 +1,14 @@
 #Postgres 14
-DB_NAME=DEV
-DB_USER=postgres
+DB_NAME="DEV"
+DB_USER="postgres"
 DB_PASSWORD=9356
-DB_HOST=localhost
+DB_HOST="localhost"
 DB_PORT=5433
 
 #Ngrok
 NGROK_HOST='2.tcp.eu.ngrok.io'
 NGROK_PORT=12849
+
+#Telegram
+TELEGRAM_CHAT_ID = "6473008661"
+TELEGRAM_BOT_TOKEN = "6652019781:AAGbMJQy9qOKPJQPkVKipCk1acZ89BxeOeo"
