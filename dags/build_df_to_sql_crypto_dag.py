@@ -3,7 +3,7 @@ from datetime import timedelta
 
 # Related third-party imports
 from airflow import DAG
-from airflow.operators.bash import BashOperator  # Updated import path for Airflow 2.x
+from airflow.operators.bash import BashOperator
 from airflow.utils.dates import days_ago
 
 # Define the default arguments for the DAG
@@ -22,7 +22,7 @@ dag = DAG(
     dag_id="build_df_to_sql_dag_crypto",
     default_args=default_args,
     description="DAG to run Python script to update raw.crypto_main",
-    schedule_interval="* * * 9 *",  # Run every 5 minutes "*/5 * * * *"
+    schedule_interval="* * * 9 *", 
     catchup=False,
     tags=['crypto', 'raw'],
 )

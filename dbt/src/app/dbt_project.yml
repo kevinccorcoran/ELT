@@ -1,5 +1,3 @@
-# dbt_project.yml
-
 # Project Metadata
 name: 'dbt_project'
 version: '1.0.0'
@@ -16,36 +14,18 @@ seed-paths: ["seeds"]
 macro-paths: ["macros"]
 snapshot-paths: ["snapshots"]
 
-# Model Configuration
-# models:
-#  dbt_project:
-#     # Configuration for models in the 'cdm' directory
-#     cdm:
-#       enabled: true
-#       # Materialization strategy for models in the 'cdm' directory
-#       +materialized: table
-#     # Configuration for models in the 'raw' directory
-#     raw:
-#       enabled: true
-#       # Materialization strategy for models in the 'raw' directory
-#       +materialized: table
-#     # Configuration for models in the 'quality_checks' directory
-#     quality_checks:
-#       schema: quality_checks # sets the default schema for this namespace
-#       # Materialization strategy for models in the 'quality_checks' directory
-#       +materialized: table
-
 # Clean Targets Configuration
 clean-targets:
- - "target"
- - "dbt_packages"
+  - "target"
+  - "dbt_packages"
 
-# Additional Model Configuration
-# This section can be used to apply specific configurations to models
-# within the 'cdm' and 'raw' directories or any other directory.
-# For example, to exclude certain models from being built, you can use tags.
+# Set the default schema for all models
 models:
- dbt_project:
-    # Example of using tags to exclude models
-    example:
-      tags: ["exclude"]
+  dbt_project:
+    +schema: cdm  # Default schema for most models
+
+    app:
+      metrics:
+        +schema: metrics  # Models in the metrics folder will go to metrics schema
+      quality_checks:
+        +schema: quality_checks  # Models in the quality_checks folder will go to quality_checks schema

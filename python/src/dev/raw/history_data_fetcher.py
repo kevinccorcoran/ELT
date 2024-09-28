@@ -1,20 +1,24 @@
 import warnings
 warnings.filterwarnings("ignore", category=FutureWarning)
 
-from datetime import datetime
-import logging
 import os
+import sys
+import logging
+from datetime import datetime
 import yfinance as yf
 import pandas as pd
 import adbc_driver_postgresql.dbapi as pg_dbapi
-import sys
 
 # Add your application directory to the system path
 sys.path.append('/Users/kevin/Dropbox/applications/ELT/python/src/')
-from dev.config.config import TICKERS  # Import TICKERS from config.py
+
+# Import configurations and helper functions
+from dev.config.config import TICKERS
+from dev.config.helpers import save_to_database
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
 
 def build_df(tickers):
     """Fetches historical stock data for given tickers and returns it as a DataFrame."""
@@ -36,13 +40,13 @@ def build_df(tickers):
             }, inplace=True)
             
             # Convert 'open' to numeric, forcing errors to NaN (optional: raise if strict validation needed)
-            dx['open'] = pd.to_numeric(dx['open'], errors='coerce').round(4)
+            dx['open'] = pd.to_numeric(dx['open'], errors='coerce').round(2)
 
             # Convert other columns to numeric and round appropriately
             dx['high'] = pd.to_numeric(dx['high'], errors='coerce').round(2)
             dx['low'] = pd.to_numeric(dx['low'], errors='coerce').round(2)
             dx['close'] = pd.to_numeric(dx['close'], errors='coerce').round(2)
-            
+
             # Check if 'adj_close' column exists before rounding
             if 'adj_close' in dx.columns:
                 dx['adj_close'] = pd.to_numeric(dx['adj_close'], errors='coerce').round(2)
@@ -54,10 +58,7 @@ def build_df(tickers):
             dx['ticker'] = ticker
             
             # Concatenate the dataframes
-            if df.empty:
-                df = dx
-            else:
-                df = pd.concat([df, dx], sort=False)
+            df = pd.concat([df, dx], sort=False) if not df.empty else dx
         
         # Reset index and rename date column
         df.reset_index(inplace=True)
@@ -74,34 +75,6 @@ def build_df(tickers):
         logging.exception("Error building DataFrame")
         raise
 
-def save_to_database(df, table_name, connection_string):
-    """Saves the DataFrame to the specified table in the database, including rows with null values."""
-    try:
-        with pg_dbapi.connect(connection_string) as conn:
-            with conn.cursor() as cur:  # Use a cursor object
-                cur.execute(f"SET search_path TO raw;")
-                
-                # Retrieve existing data from the table
-                query = f"SELECT date, ticker FROM {table_name}"
-                existing_data = pd.read_sql(query, conn)
-                
-                # Convert date column in existing data to datetime.date for comparison
-                existing_data['date'] = pd.to_datetime(existing_data['date']).dt.date
-                
-                # Merge to find the records that are not in the existing data
-                df_new = pd.merge(df, existing_data, on=['date', 'ticker'], how='left', indicator=True)
-                df_new = df_new[df_new['_merge'] == 'left_only'].drop(columns=['_merge'])
-                
-                if not df_new.empty:
-                    # Save only the new rows to the database, including those with NaNs
-                    df_new.to_sql(table_name, conn, if_exists='append', index=False)
-                    logging.info(f"{len(df_new)} new rows successfully saved to {table_name}")
-                else:
-                    logging.info("No new rows to insert.")
-                
-    except Exception as e:
-        logging.exception("Failed to save data to database")
-        raise
 
 if __name__ == "__main__":
     table_name = 'history_data_fetcher'  # Name of the table to create or replace
@@ -115,9 +88,10 @@ if __name__ == "__main__":
         try:
             # Fetch the data for the tickers defined in config.py
             df = build_df(TICKERS)
+            logging.info(f"Data fetched for {len(TICKERS)} tickers")
             print(df.head())  # Optionally print the first few rows for verification
             
             # Save the DataFrame to the specified table in the database
-            save_to_database(df, table_name, connection_string)
+            save_to_database(df, table_name, connection_string, schema_name='raw')
         except Exception as e:
             logging.exception("Unexpected error occurred")

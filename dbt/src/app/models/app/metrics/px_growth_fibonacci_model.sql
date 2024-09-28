@@ -1,0 +1,117 @@
+{{ 
+config(
+	
+    materialized='table'
+)
+}}
+
+
+-- Import from cdm.ticker_fibonacci_dates
+with fibonacci_transform_dates as (
+select
+	ticker,
+	"date",
+	"row_number"
+from
+    {{ source('cdm', 'fibonacci_transform_dates') }}
+),
+-- Import from raw.history_data_fetcher
+history_data_fetcher as (
+select
+	ticker,
+	"date",
+	"close"
+from
+    {{ source('raw', 'history_data_fetcher') }}
+),
+-- Joining history data with Fibonacci dates
+table_join as (
+select
+	hdf."date" as date,
+	hdf."close",
+	hdf.ticker as tickers,
+	ftd.ticker,
+	ftd."date" as date_ftd,
+	ftd.row_number
+from
+	history_data_fetcher hdf
+left join
+        fibonacci_transform_dates ftd 
+        on
+	hdf."date" = ftd."date"
+	and hdf.ticker = ftd.ticker
+),
+-- Identifying if a date is a Fibonacci date
+is_fibonacci_date as (
+select
+	date,
+	close,
+	tickers,
+	ticker,
+	date_ftd,
+	row_number,
+	case
+		when date = "date_ftd" then true
+		else false
+	end as is_fibonacci_date
+from
+	table_join
+),
+-- Finding the minimum close price within a period
+min_close_within_period as (
+select
+	date,
+	close,
+	ticker,
+	case
+		when is_fibonacci_date = true
+			and row_number < 3 then 
+                MIN(close) over (
+                    partition by tickers
+		order by
+			date
+                    rows between 0 preceding and 252 following
+                )
+			when is_fibonacci_date = true
+			and row_number >= 3 then 
+                MIN(close) over (
+                    partition by tickers
+		order by
+			date
+                    rows between 126 preceding and 126 following
+                )
+			else null
+		end as min_close_within_period
+	from
+		is_fibonacci_date
+),
+-- Join to combine Fibonacci date info and minimum close price
+final_period_min as (
+select
+	ifd.ticker,
+	ifd.date,
+	ifd.row_number,
+	m.min_close_within_period
+from
+	is_fibonacci_date ifd
+join
+        min_close_within_period m
+    on
+	ifd.ticker = m.ticker
+	and ifd.date = m.date
+)
+-- Calculate growth rate since IPO for each Fibonacci date
+select
+	*,
+	ROUND(
+        CASE 
+            WHEN FIRST_VALUE(min_close_within_period) OVER (PARTITION BY ticker ORDER BY row_number ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) = 0
+            THEN NULL  -- Avoid division by zero
+            ELSE ((min_close_within_period - FIRST_VALUE(min_close_within_period) OVER (PARTITION BY ticker ORDER BY row_number ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING))
+            / FIRST_VALUE(min_close_within_period) OVER (PARTITION BY ticker ORDER BY row_number ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) * 100)::numeric
+        END, 
+        2
+    ) AS growth_rate
+from
+	final_period_min
+
