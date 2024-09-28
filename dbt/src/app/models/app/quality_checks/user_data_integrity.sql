@@ -1,7 +1,6 @@
 {{ config(
     materialized='incremental',
-    unique_key='PROCESSED_AT',
-    schema='quality_checks'
+    unique_key='PROCESSED_AT'
 ) }}
 
 with cte as ( 

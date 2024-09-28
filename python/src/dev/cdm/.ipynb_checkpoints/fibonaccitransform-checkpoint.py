@@ -35,13 +35,13 @@ def process_stock_data(df, years_to_add=3):
         min_dates_shifted['date'] = min_dates_shifted['date'].apply(get_next_trading_day)
         
         # Merge with the original DataFrame to get other columns for the shifted dates
-        shifted_df = pd.merge(min_dates_shifted, df, on=['ticker', 'date'], how='left')[['ticker', 'date', 'open', 'high', 'low', 'close', 'volume']]
+        shifted_df = pd.merge(min_dates_shifted, df, on=['ticker', 'date'], how='left')[['ticker', 'date', 'open', 'high', 'low', 'close']]
         
         # Add the shifted DataFrame to the list
         all_years_dfs.append(shifted_df)
 
     # Also include the original minimum dates DataFrame
-    min_result_df = pd.merge(min_dates, df, on=['ticker', 'date'], how='left')[['ticker', 'date', 'open', 'high', 'low', 'close', 'volume']]
+    min_result_df = pd.merge(min_dates, df, on=['ticker', 'date'], how='left')[['ticker', 'date', 'open', 'high', 'low', 'close']]
     all_years_dfs.insert(0, min_result_df)
     
     # Concatenate all DataFrames to have min date, min_date + n years in separate rows
@@ -118,7 +118,6 @@ if __name__ == "__main__":
                 df['high'] = df['high'].astype(float)
                 df['low'] = df['low'].astype(float)
                 df['close'] = df['close'].astype(float)
-                df['volume'] = df['volume'].astype(int)
                 
                 # Process the fetched data and specify the number of years to add
                 result_df = process_stock_data(df, years_to_add=100)
@@ -143,5 +142,4 @@ if __name__ == "__main__":
                 print("No data fetched from the database.")
         except Exception as e:
             print("Unexpected error occurred:", e)
-#print(matching_rows.dtypes)
-print(df.shape)
+print(result_df)

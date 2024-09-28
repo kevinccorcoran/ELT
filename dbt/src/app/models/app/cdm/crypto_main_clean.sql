@@ -1,7 +1,7 @@
 {{ 
 config(
     materialized='table'
-) 
+)
 }}
 
 WITH crypto_main AS (

@@ -1,10 +1,8 @@
-
 {{ 
-    config(
-        materialized='table', 
-        unique_key='ticker'
-    )
-
+config(
+    materialized='table',
+    unique_key='ticker'
+)
 }}
 
 -- Initial setup: Select and clean data from the "historical_daily_main" table.

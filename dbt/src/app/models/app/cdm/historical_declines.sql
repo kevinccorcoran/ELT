@@ -1,10 +1,8 @@
-
 {{ 
-    config(
-        materialized='table', 
-        unique_key='ticker'
-    )
-
+config(
+    materialized='table',
+    unique_key='ticker'
+)
 }}
 
 WITH BASE AS (

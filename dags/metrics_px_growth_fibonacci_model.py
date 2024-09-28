@@ -21,7 +21,7 @@ default_args = {
 }
 
 with DAG(
-    dag_id="px_growth_fibonacci_model",
+    dag_id="metrics_px_growth_fibonacci_model",
     description="A DAG for processing pure growth data with Postgres, triggered after build_df_to_sql_dag",
     default_args=default_args,
     # Replaced start_date with pendulum and schedule_interval with schedule
@@ -40,8 +40,8 @@ with DAG(
 
     # Task to run a DBT command or any bash command
     dbt_run = BashOperator(
-        task_id='dbt_run',
-        bash_command='cd /Users/kevin/Dropbox/applications/ELT/dbt/src/app/ && dbt run --models pure_growth',
+        task_id='dbt_run_model_px_growth_fibonacci_model',
+        bash_command='cd /Users/kevin/Dropbox/applications/ELT/dbt/src/app/models/app/metrics/ && dbt run --models px_growth_fibonacci_model',
     )
    
     # Set task dependencies
