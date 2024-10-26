@@ -4,4 +4,4 @@ sources:
   - name: cdm
     schema: cdm  # The actual schema name in your database where your raw tables are
     tables:
-      - name: fibonacci_transform_dates
+      - name: date_lookup

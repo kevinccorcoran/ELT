@@ -55,8 +55,9 @@ def process_stock_data(df, years_to_add=3):
 
 
 if __name__ == "__main__":
-    table_name = 'history_data_fetcher'  # Table to fetch data from
-    new_table_name = 'fibonacci_transform_dates'  # Table to save processed data
+    schema_name = 'raw'  # Define the schema where the table is located
+    table_name = 'api_raw_data_ingestion'  # Table to fetch data from
+    new_table_name = 'date_lookup'  # Table to save processed data
 
     # Retrieve connection string from environment variables
     connection_string = os.getenv('DB_CONNECTION_STRING')
@@ -65,8 +66,8 @@ if __name__ == "__main__":
         print("DB_CONNECTION_STRING environment variable not set")
     else:
         try:
-            # Fetch the data from the database
-            df = fetch_data_from_database(table_name, connection_string)
+            # Fetch the data from the database, passing both the schema and table name
+            df = fetch_data_from_database(schema_name, table_name, connection_string)
 
             if df is not None:
                 # Process the fetched data and specify the number of years to add
@@ -82,7 +83,10 @@ if __name__ == "__main__":
                 matching_rows = matching_rows.sort_values(by=['ticker', 'date', 'row_number'], ascending=True)
 
                 # Save the filtered and sorted DataFrame to the specified table in the 'cdm' schema
-                save_to_database(matching_rows, new_table_name, connection_string, schema_name='cdm')
+                # using 'ticker' and 'date' as the key columns to avoid duplicate entries.
+                #save_to_database(matching_rows, new_table_name, connection_string, schema_name='cdm')
+                #save_to_database(df, new_table_name, connection_string, 'cdm', ['ticker', 'date'])
+                save_to_database(matching_rows, new_table_name, connection_string, 'cdm', ['ticker', 'date'])
 
                 # Display the resulting sorted and filtered DataFrame
                 print(matching_rows)
@@ -90,4 +94,3 @@ if __name__ == "__main__":
                 print("No data fetched from the database.")
         except Exception as e:
             print("Unexpected error occurred:", e)
-print(result_df)
