@@ -4,4 +4,4 @@ sources:
   - name: raw
     schema: raw  # The actual schema name in your database where your raw tables are
     tables:
-      - name: historical_daily_main
+      - name: api_raw_data_ingestion
