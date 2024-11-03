@@ -75,25 +75,15 @@ def build_df(tickers, start_date=None, end_date=None):
         # Add the processed_at column with the current timestamp
         df['processed_at'] = datetime.now()
 
-        # Add ticker_date_id by concatenating ticker and date
+        # Create ticker_date_id as the concatenation of ticker and date
         df['ticker_date_id'] = df['ticker'].astype(str) + '_' + df['date'].astype(str)
 
     return df  # Return the constructed DataFrame
 
 if __name__ == "__main__":
-    # Argument parser to take optional start_date and end_date
-    parser = argparse.ArgumentParser(description="Fetch stock data.")
-    parser.add_argument("--start_date", help="Start date for data fetch (format YYYY-MM-DD)", required=False)
-    parser.add_argument("--end_date", help="End date for data fetch (format YYYY-MM-DD)", required=False)
-    args = parser.parse_args()
-
-    # Set dates to today if not provided
-    today = datetime.now().strftime('%Y-%m-%d')
-    start_date = args.start_date if args.start_date else today
-    end_date = args.end_date if args.end_date else today
-
+    # Define the table name and key columns for saving to the database
     table_name = 'api_raw_data_ingestion'  # Name of the table to create or replace
-    key_columns = ['ticker_date_id']  # Key columns to check for duplicates
+    key_columns = ['ticker_date_id']  # Key columns to check for duplicates, adjust as needed
 
     # Retrieve connection string from environment variables
     connection_string = os.getenv('DB_CONNECTION_STRING')
@@ -102,8 +92,9 @@ if __name__ == "__main__":
         logging.error("DB_CONNECTION_STRING environment variable not set")
     else:
         try:
-            # Fetch the data for the specified date range
-            df = build_df(TICKERS, start_date=start_date, end_date=end_date)
+            # Fetch the data without specifying date range (full history)
+            df = build_df(TICKERS)  # Omitting start_date and end_date to fetch full history
+            
             if not df.empty:
                 logging.info(f"Data fetched for {len(df['ticker'].unique())} tickers with records.")
                 print(df.head())  # Optionally print the first few rows for verification
