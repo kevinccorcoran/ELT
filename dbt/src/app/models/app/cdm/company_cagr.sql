@@ -53,7 +53,7 @@ interval_based_cagr_data AS (
         n,
         CASE
             WHEN n = 0 THEN 0  -- Set CAGR to 0 when n is 0
-            WHEN previous_close = 0 THEN NULL  -- Avoid division by zero by returning NULL
+            WHEN previous_close <= 0 OR close <= 0 THEN NULL  -- Avoid complex results by excluding negative values
             ELSE ROUND(CAST(((close / previous_close) ^ (1.0 / 1) - 1) * 100 AS NUMERIC), 2)
         END AS cagr,
         'Interval-Based CAGR' AS type
@@ -75,7 +75,7 @@ from_0_cagr_data AS (
         n,
         CASE
             WHEN n = 0 THEN 0  -- Set CAGR to 0 when n is 0
-            WHEN base_close = 0 THEN NULL  -- Avoid division by zero by returning NULL
+            WHEN base_close <= 0 OR close <= 0 THEN NULL  -- Avoid complex results by excluding negative values
             ELSE ROUND(CAST(((close / base_close) ^ (1.0 / n) - 1) * 100 AS NUMERIC), 2)
         END AS cagr,
         'CAGR from Zero' AS type
@@ -111,7 +111,7 @@ select_distinct AS (
         ranked_cagr_data
     WHERE
         cagr IS NOT NULL
-        and n <> 0
+        AND n <> 0
 )
 SELECT
     *
