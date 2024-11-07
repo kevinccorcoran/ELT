@@ -3,6 +3,7 @@ import sys
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import min as spark_min, col, row_number, expr, explode
 from pyspark.sql.window import Window
+from pyspark.sql.functions import broadcast
 from dev.config.fibonacci import cumulative_fibonacci
 from dev.config.helpers import save_to_database
 
@@ -22,7 +23,7 @@ spark = SparkSession.builder \
     .config("spark.jars", postgres_jar_path) \
     .config("spark.driver.memory", "8g") \
     .config("spark.executor.memory", "8g") \
-    .config("spark.sql.shuffle.partitions", "4") \
+    .config("spark.sql.shuffle.partitions", "200") \
     .getOrCreate()
 
 try:
@@ -35,6 +36,7 @@ try:
         .option("password", db_password) \
         .option("driver", "org.postgresql.Driver") \
         .load()
+    
 
     # Load existing records from the target table to avoid duplicates
     existing_df = spark.read \
@@ -71,7 +73,7 @@ try:
     result_df = date_df.join(fib_df, "row_number", "inner")
 
     # Step 6: Remove records that already exist in the target table
-    new_records_df = result_df.join(existing_df, on=["ticker", "date"], how="left_anti")
+    new_records_df = result_df.join(broadcast(existing_df), on=["ticker", "date"], how="left_anti")
 
     # Step 7: Write new records to PostgreSQL with batch optimization
     new_records_df.coalesce(1).write \
@@ -81,7 +83,7 @@ try:
         .option("user", db_user) \
         .option("password", db_password) \
         .option("driver", "org.postgresql.Driver") \
-        .option("batchsize", "5000") \
+        .option("batchsize", "10000") \
         .mode("append") \
         .save()
 
@@ -115,7 +117,6 @@ finally:
 # from dev.config.fibonacci import cumulative_fibonacci
 # from dev.config.helpers import save_to_database, fetch_data_from_database
 
-
 # def get_next_trading_day(date):
 #     """Returns the next available trading day."""
 #     return pd.bdate_range(date, periods=1)[0].date()
@@ -123,27 +124,9 @@ finally:
 # def process_stock_data(df, years_to_add=3):
 #     """Processes the stock data to find and extend minimum dates for each ticker."""
     
-#     # Group by 'ticker' and select the minimum date for each group
-#     min_dates = df.groupby('ticker')['date'].min().reset_index()
+#     # Ensure 'date' column is in datetime.date format to prevent merging errors
+#     df['date'] = pd.to_datetime(df['date']).dt.date
 
-#     # Create a list of offsets for each year
-#     date_offsets = [min_dates.assign(date=min_dates['date'] + DateOffset(years=year)) for year in range(years_to_add + 1)]
-
-#     # Concatenate all date-shifted dataframes
-#     result_df = pd.concat(date_offsets, ignore_index=True)
-
-#     # Ensure all dates are in datetime.date format
-#     result_df['date'] = pd.to_datetime(result_df['date']).dt.date
-#     result_df.dropna(inplace=True)
-
-#     # Add row numbers for each ticker and date
-#     result_df['row_number'] = result_df.sort_values('date').groupby('ticker').cumcount()
-
-#     return result_df
-
-# def process_stock_data(df, years_to_add=3):
-#     """Processes the stock data to find and extend minimum dates for each ticker."""
-    
 #     # Group by 'ticker' and select the minimum date for each group
 #     min_dates = df.groupby('ticker')['date'].min().reset_index()
 
@@ -151,10 +134,13 @@ finally:
 #     all_years_dfs = [min_dates]  # Start with the minimum dates (unshifted)
 
 #     # Loop through the range to add multiple years
-#     for year in range(1, years_to_add + 1):  # Adjust the loop to match the `years_to_add` argument
+#     for year in range(1, years_to_add + 1):
 #         min_dates_shifted = min_dates.copy()
 #         min_dates_shifted['date'] = min_dates_shifted['date'] + DateOffset(years=year)
 #         min_dates_shifted['date'] = min_dates_shifted['date'].apply(get_next_trading_day)
+
+#         # Ensure consistent 'date' format before merging
+#         min_dates_shifted['date'] = pd.to_datetime(min_dates_shifted['date']).dt.date
 
 #         # Merge with the original DataFrame to get other columns for the shifted dates
 #         shifted_df = pd.merge(min_dates_shifted, df, on=['ticker', 'date'], how='left')[['ticker', 'date']]
@@ -165,15 +151,12 @@ finally:
 
 #     # Ensure all dates are in datetime.date format
 #     result_df['date'] = pd.to_datetime(result_df['date']).dt.date
-
-#     # Remove any rows with NaN values
-#     result_df = result_df.dropna()
+#     result_df.dropna(inplace=True)
 
 #     # Add a row number partitioned by 'ticker' and ordered by 'date'
 #     result_df['row_number'] = result_df.sort_values('date').groupby('ticker').cumcount()
 
 #     return result_df
-
 
 # if __name__ == "__main__":
 #     schema_name = 'raw'  # Define the schema where the table is located
@@ -187,7 +170,7 @@ finally:
 #         print("DB_CONNECTION_STRING environment variable not set")
 #     else:
 #         try:
-#             # Fetch the data from the database, passing both the schema and table name
+#             # Fetch the data from the database
 #             df = fetch_data_from_database(schema_name, table_name, connection_string)
 
 #             if df is not None:
@@ -204,9 +187,6 @@ finally:
 #                 matching_rows = matching_rows.sort_values(by=['ticker', 'date', 'row_number'], ascending=True)
 
 #                 # Save the filtered and sorted DataFrame to the specified table in the 'cdm' schema
-#                 # using 'ticker' and 'date' as the key columns to avoid duplicate entries.
-#                 #save_to_database(matching_rows, new_table_name, connection_string, schema_name='cdm')
-#                 #save_to_database(df, new_table_name, connection_string, 'cdm', ['ticker', 'date'])
 #                 save_to_database(matching_rows, new_table_name, connection_string, 'cdm', ['ticker', 'date'])
 
 #                 # Display the resulting sorted and filtered DataFrame

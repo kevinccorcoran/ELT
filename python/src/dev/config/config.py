@@ -1,8 +1,7 @@
+TICKERS = ['AAPL']
 
-#TICKERS = ['ACN']
 
-TICKERS = ['AAPL','MSFT','GOOG','AMZN','META','NVDA','TSLA']
-
+# # Full list 
 # TICKERS = ['A', 'AA', 'AACT', 'AACT.U', 'AACT.WS', 'AAM', 'AAM.U', 'AAM.WS', 'AAP', 'AAT', 
 # 'AB', 'ABBV', 'ABC', 'ABCB', 'ABEV', 'ABG', 'ABM', 'ABR', 'ABRpD', 'ABRpE', 
 # 'ABRpF', 'ABT', 'ABX', 'AC', 'ACA', 'ACCO', 'ACEL', 'ACHR', 'ACHR.WS', 'ACI', 
@@ -298,10 +297,9 @@ TICKERS = ['AAPL','MSFT','GOOG','AMZN','META','NVDA','TSLA']
 # 'XHR', 'XIN', 'XOM', 'XPER', 'XPEV', 'XPO', 'XPOF', 'XPRO', 'XYF', 'XYL', 
 # 'YALA', 'YELP', 'YETI', 'YEXT', 'YMM', 'YOU', 'YPF', 'YPF', 'YRD', 'YSG', 
 # 'YUM', 'YUMC', 'ZBH', 'ZEPP', 'ZETA', 'ZGN', 'ZH', 'ZIM', 'ZIP', 'ZK', 
-# 'ZKH', 'ZTO', 'ZTR', 'ZTS', 'ZUO', 'ZVIA', 'ZWS', 
-
-# 'AACG', 'AADI', 'AADR', 'AAL', 'AAME', 'AAOI', 'AAON', 'AAPB', 'AAPD', 'AAPL', 
-# 'AAPU', 'AAXJ', 'AAXN', 'ABAT', 'ABCL', 'ABCS', 'ABEO', 'ABL', 'ABLLL', 'ABLLW', 
+# 'ZKH', 'ZTO', 'ZTR', 'ZTS', 'ZUO', 'ZVIA', 'ZWS','AACG', 'AADI', 'AADR', 'AAL', 
+# 'AAME', 'AAOI', 'AAON', 'AAPB', 'AAPD', 'AAPL', 'AAPU', 'AAXJ', 'AAXN', 'ABAT', 
+# 'ABCL', 'ABCS', 'ABEO', 'ABL', 'ABLLL', 'ABLLW', 
 # 'ABLV', 'ABLVW', 'ABNB', 'ABOS', 'ABSI', 'ABTS', 'ABUS', 'ABVC', 'ABVE', 'ABVEW', 
 # 'ABVX', 'ACAB', 'ACABU', 'ACABW', 'ACAD', 'ACB', 'ACCD', 'ACDC', 'ACET', 'ACGL', 
 # 'ACGLN', 'ACGLO', 'ACHC', 'ACHL', 'ACHV', 'ACIC', 'ACIU', 'ACIW', 'ACLS', 'ACLX', 
