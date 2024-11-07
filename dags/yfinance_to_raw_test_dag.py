@@ -29,7 +29,7 @@ dag = DAG(
     dag_id="yfinance_to_raw_test_dag",
     default_args=default_args,
     description="DAG to run a Python script that updates raw.",
-    schedule_interval="0 23 * * *",  # Run daily at 11 PM UTC
+    schedule_interval=None,  # Run only when triggered manually
     catchup=False,  # Ensures it does not backfill from start_date to now
 )
 

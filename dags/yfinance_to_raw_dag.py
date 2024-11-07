@@ -24,7 +24,7 @@ dag = DAG(
     dag_id="yfinance_to_raw",
     default_args=default_args,
     description="DAG to run a Python script that updates raw.",
-    schedule_interval="0 23 * * *", # Run daily at 9 AM UTC
+    schedule_interval="0 22 * * *", # Run daily at 9 AM UTC
     catchup=False,
     #tags=['yfinance', 'raw_data', 'history_data_fetcher'],
 )
