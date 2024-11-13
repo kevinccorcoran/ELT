@@ -22,6 +22,7 @@ clean-targets:
 # Set the default schema for all models
 models:
   dbt_project:
+    +database: "{{ env_var('ENV') }}"
     +schema: cdm  # Default schema for most models
 
     app:
