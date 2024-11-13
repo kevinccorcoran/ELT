@@ -10,7 +10,7 @@ from airflow.models import Variable
 
 # Retrieve environment-specific variables
 env = Variable.get("ENV", default_var="staging")
-if env == "dev":
+if env == "DEV":
     db_connection_string = Variable.get("DEV_DB_CONNECTION_STRING")
 elif env == "staging":
     db_connection_string = Variable.get("STAGING_DB_CONNECTION_STRING")
@@ -33,23 +33,22 @@ dag = DAG(
     dag_id="yfinance_to_raw",
     default_args=default_args,
     description="DAG to run a Python script that updates raw.",
-    schedule_interval="0 22 * * *", # Run daily at 9 AM UTC
+    schedule_interval="0 22 * * *",  # Run daily at 10 PM UTC
     catchup=False,
-    #tags=['yfinance', 'raw_data', 'history_data_fetcher'],
 )
 
-# Run the yfinance_to_raw_etl.py Python script, which fetches data from the yfinance API and saves it into the PostgreSQL table dev.raw.yfinance_to_raw_etl
+# Task to run the yfinance_to_raw_etl.py script, fetching data from the yfinance API and saving it into the PostgreSQL table dev.raw.yfinance_to_raw_etl
 fetch_yfinance_data = BashOperator(
     task_id='fetched_yfinance_data',
     bash_command='python /Users/kevin/Dropbox/applications/ELT/python/src/dev/raw/yfinance_to_raw_etl.py',
     dag=dag,
 )
 
-# Trigger the DAG that creates the cdm.fibonacci_transform_dates table
+# Task to trigger the DAG that creates the cdm.fibonacci_transform_dates table
 trigger_raw_to_lookup_dag = TriggerDagRunOperator(
     task_id='trigger_dag_for_cdm_fibonacci_transform_dates_lookup_table',
-    trigger_dag_id="raw_to_lookup_dag", # The ID of the DAG to trigger
-    dag=dag, 
+    trigger_dag_id="raw_to_lookup_dag",  # The ID of the DAG to trigger
+    dag=dag,
 )
 
 # Set task dependencies

@@ -19,14 +19,15 @@ clean-targets:
   - "target"
   - "dbt_packages"
 
-# Set the default schema for all models
+# Model Configuration
 models:
   dbt_project:
     +database: "{{ env_var('ENV') }}"
     +schema: cdm  # Default schema for most models
 
+    # Schema Overrides for Specific Model Folders
     app:
       metrics:
-        +schema: metrics  # Models in the metrics folder will go to metrics schema
+        +schema: metrics         # Models in the 'metrics' folder use the 'metrics' schema
       quality_checks:
-        +schema: quality_checks  # Models in the quality_checks folder will go to quality_checks schema
+        +schema: quality_checks  # Models in the 'quality_checks' folder use the 'quality_checks' schema

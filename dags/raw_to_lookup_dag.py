@@ -9,7 +9,7 @@ from airflow.operators.python import PythonOperator
 
 # Retrieve the environment-specific connection string variable
 env = Variable.get("ENV", default_var="staging")
-if env == "dev":
+if env == "DEV":
     db_connection_string = Variable.get("DEV_DB_CONNECTION_STRING")
 elif env == "staging":
     db_connection_string = Variable.get("STAGING_DB_CONNECTION_STRING")
@@ -53,30 +53,30 @@ with DAG(
         sql="SELECT 1;",
     )
 
-    # Define environment variables to pass to the BashOperator
+    # Define environment variables for the BashOperator
     env_vars = {
-    'DB_CONNECTION_STRING': db_connection_string,
-    'ENV': env,
-    'JAVA_HOME': '/usr/local/opt/openjdk@11',  # Ensure JAVA_HOME is correctly set
-    'PATH': '/Users/kevin/.pyenv/shims:/usr/local/bin:/usr/bin:/bin',
-    'PYTHONPATH': '/Users/kevin/Dropbox/applications/ELT/python/src',  # Add PYTHONPATH to locate dev module
+        'DB_CONNECTION_STRING': db_connection_string,
+        'ENV': env,
+        'JAVA_HOME': '/usr/local/opt/openjdk@11',  # Ensure JAVA_HOME is correctly set
+        'PATH': '/Users/kevin/.pyenv/shims:/usr/local/bin:/usr/bin:/bin',
+        'PYTHONPATH': '/Users/kevin/Dropbox/applications/ELT/python/src',  # Add PYTHONPATH to locate dev module
     }
 
     # Task to execute the ETL script
     create_cdm_date_lookup_table = BashOperator(
-        task_id='created_cdm_date_lookup_table',
+        task_id='create_cdm_date_lookup_table',
         bash_command=(
             'echo "DB_CONNECTION_STRING: $DB_CONNECTION_STRING"; '
-             'echo "ENV: $ENV"; '  # Print the ENV variable
+            'echo "ENV: $ENV"; '  # Print the ENV variable
             '/Users/kevin/.pyenv/shims/python3 /Users/kevin/Dropbox/applications/ELT/python/src/dev/cdm/raw_to_lookup_etl.py'
         ),
-        env=env_vars,  # Pass the env_vars dictionary here, including PYTHONPATH
+        env=env_vars,
     )   
 
     # Task to trigger the next DAG for the company CAGR calculation
     cdm_company_cagr_model = TriggerDagRunOperator(
         task_id='trigger_dag_cdm_company_cagr_model',
-        trigger_dag_id="cdm_company_cagr_dag",  # ID of the DAG to trigger
+        trigger_dag_id="cdm_company_cagr_dag",
     )
 
     # Set task dependencies

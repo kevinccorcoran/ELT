@@ -8,7 +8,6 @@
     )
 }}
 
-
 WITH history_data AS (
     -- Fetch historical data: ticker, date, and closing price
     SELECT
@@ -18,6 +17,7 @@ WITH history_data AS (
     FROM
         {{ source('raw', 'api_raw_data_ingestion') }}
 ),
+
 filtered_fibonacci_dates AS (
     -- Select relevant Fibonacci dates: ticker, date, and row number less than 34
     SELECT
@@ -29,6 +29,7 @@ filtered_fibonacci_dates AS (
     WHERE
         row_number < 34
 ),
+
 joined_data AS (
     -- Join historical data with filtered Fibonacci dates on ticker and date
     SELECT
@@ -43,6 +44,7 @@ joined_data AS (
         hdf.ticker = ftd.ticker
         AND hdf.date = ftd.date
 ),
+
 data_with_previous_close AS (
     -- Add the previous close value for each ticker, based on the order of n
     SELECT
@@ -51,6 +53,7 @@ data_with_previous_close AS (
     FROM
         joined_data
 ),
+
 interval_based_cagr_data AS (
     -- Calculate the Compound Annual Growth Rate (CAGR) for each ticker using the previous close value
     SELECT
@@ -58,13 +61,14 @@ interval_based_cagr_data AS (
         n,
         CASE
             WHEN n = 0 THEN 0  -- Set CAGR to 0 when n is 0
-            WHEN previous_close <= 0 OR close <= 0 THEN NULL  -- Avoid complex results by excluding negative values
+            WHEN previous_close <= 0 OR close <= 0 THEN NULL  -- Exclude negative or zero values
             ELSE ROUND(CAST(((close / previous_close) ^ (1.0 / 1) - 1) * 100 AS NUMERIC), 2)
         END AS cagr,
         'Interval-Based CAGR' AS type
     FROM
         data_with_previous_close
 ),
+
 data_with_base_close AS (
     -- Add the base close value for each ticker, based on the smallest row number (n = 0)
     SELECT
@@ -73,6 +77,7 @@ data_with_base_close AS (
     FROM
         joined_data
 ),
+
 from_0_cagr_data AS (
     -- Calculate the Compound Annual Growth Rate (CAGR) for each ticker from base close
     SELECT
@@ -80,21 +85,23 @@ from_0_cagr_data AS (
         n,
         CASE
             WHEN n = 0 THEN 0  -- Set CAGR to 0 when n is 0
-            WHEN base_close <= 0 OR close <= 0 THEN NULL  -- Avoid complex results by excluding negative values
+            WHEN base_close <= 0 OR close <= 0 THEN NULL  -- Exclude negative or zero values
             ELSE ROUND(CAST(((close / base_close) ^ (1.0 / n) - 1) * 100 AS NUMERIC), 2)
         END AS cagr,
         'CAGR from Zero' AS type
     FROM
         data_with_base_close
 ),
+
 union_all AS (
     -- Combine interval-based CAGR and CAGR from zero
     SELECT * FROM interval_based_cagr_data
     UNION ALL
     SELECT * FROM from_0_cagr_data
 ),
+
 ranked_cagr_data AS (
-    -- Use ntile to divide the CAGR values into 10 groups
+    -- Use NTILE to divide CAGR values into 10 groups for ranking
     SELECT
         ticker,
         n,
@@ -104,6 +111,7 @@ ranked_cagr_data AS (
     FROM
         union_all
 ),
+
 select_distinct AS (
     -- Select distinct results and filter out null CAGRs
     SELECT DISTINCT
@@ -118,8 +126,9 @@ select_distinct AS (
         cagr IS NOT NULL
         AND n <> 0
 )
+
+-- Final selection from the distinct, ranked data
 SELECT
     *
 FROM
     select_distinct
-
