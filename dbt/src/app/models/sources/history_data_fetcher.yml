@@ -1,7 +1,0 @@
-# version: 2
-
-sources:
-  - name: raw
-    schema: raw  # The actual schema name in your database where your raw tables are
-    tables:
-      - name: history_data_fetcher

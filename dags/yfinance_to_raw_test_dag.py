@@ -7,7 +7,7 @@ from airflow.operators.python import PythonOperator
 
 # Retrieve environment-specific variables
 env = Variable.get("ENV", default_var="staging")
-if env == "dev":
+if env == "DEV":
     db_connection_string = Variable.get("DEV_DB_CONNECTION_STRING")
 elif env == "staging":
     db_connection_string = Variable.get("STAGING_DB_CONNECTION_STRING")
@@ -24,7 +24,7 @@ log_env = PythonOperator(
 default_args = {
     'owner': 'airflow',
     'depends_on_past': False,
-    'start_date': datetime(2023, 1, 1),  # Set far past start date without end_date constraint
+    'start_date': datetime(2023, 1, 1),  # Start date to support a wide backfill range if needed
     'email_on_failure': False,
     'email_on_retry': False,
     'retries': 1,
@@ -36,11 +36,11 @@ dag = DAG(
     dag_id="yfinance_to_raw_test_dag",
     default_args=default_args,
     description="DAG to run a Python script that updates raw.",
-    schedule_interval=None,  # Run only when triggered manually
+    schedule_interval=None,  # Run only when manually triggered
     catchup=False,  # Ensures it does not backfill from start_date to now
 )
 
-# Run the yfinance_to_raw_etl.py Python script, passing environment-specific DB connection as an environment variable
+# Task to run the yfinance_to_raw_etl.py Python script, passing environment-specific DB connection
 fetch_yfinance_data = BashOperator(
     task_id='fetch_yfinance_data',
     bash_command=(
@@ -54,10 +54,10 @@ fetch_yfinance_data = BashOperator(
     dag=dag,
 )
 
-# Trigger the DAG that creates the cdm.fibonacci_transform_dates table
+# Task to trigger the next DAG for creating the cdm.fibonacci_transform_dates table
 trigger_raw_to_lookup_dag = TriggerDagRunOperator(
     task_id='trigger_dag_for_cdm_fibonacci_transform_dates_lookup_table',
-    trigger_dag_id="raw_to_lookup_dag",  # The ID of the DAG to trigger
+    trigger_dag_id="raw_to_lookup_dag",  # ID of the DAG to trigger
     dag=dag,
 )
 

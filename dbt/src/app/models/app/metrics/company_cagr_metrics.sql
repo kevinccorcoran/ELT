@@ -8,8 +8,7 @@
     )
 }}
 
-
-with avg_cagr AS (
+WITH avg_cagr AS (
     -- Calculate the average CAGR for each group
     SELECT
         n,
@@ -19,11 +18,11 @@ with avg_cagr AS (
     FROM
         {{ ref('company_cagr') }}
     GROUP BY
-        n,
-        cagr_group,
-        type)
-, min_max AS (
-    -- Calculate the min and max CAGR for each group
+        n, cagr_group, type
+),
+
+min_max AS (
+    -- Calculate the minimum and maximum CAGR for each group
     SELECT
         n,
         cagr_group,
@@ -33,11 +32,11 @@ with avg_cagr AS (
     FROM
         {{ ref('company_cagr') }}
     GROUP BY
-        n,
-        cagr_group,
-        type
+        n, cagr_group, type
 ),
+
 cte AS (
+    -- Combine average, min, and max CAGR values for each group
     SELECT
         ac.n,
         ac.cagr_group,
@@ -48,12 +47,13 @@ cte AS (
     FROM
         avg_cagr ac
     JOIN
-        min_max mm
-    ON
+        min_max mm ON
         ac.n = mm.n
         AND ac.cagr_group = mm.cagr_group
         AND ac.type = mm.type
 )
+
+-- Final selection from the combined data
 SELECT
     *
 FROM
