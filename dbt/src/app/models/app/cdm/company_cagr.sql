@@ -1,8 +1,13 @@
-{{ 
+{% do log("Current ENV: " ~ env_var('ENV'), info=true) %}
+
+{{
     config(
-        materialized='table'
+        materialized='table',
+        database=env_var('ENV'),
+        schema='cdm'
     )
 }}
+
 
 WITH history_data AS (
     -- Fetch historical data: ticker, date, and closing price

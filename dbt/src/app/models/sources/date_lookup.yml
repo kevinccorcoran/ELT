@@ -1,7 +1,8 @@
-# version: 2
+version: 2
 
 sources:
   - name: cdm
-    schema: cdm  # The actual schema name in your database where your raw tables are
+    database: "{{ env_var('ENV') }}"  # Dynamically set based on environment
+    schema: cdm
     tables:
       - name: date_lookup

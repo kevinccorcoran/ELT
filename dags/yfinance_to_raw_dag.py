@@ -6,7 +6,16 @@ from airflow import DAG
 from airflow.operators.bash import BashOperator
 from airflow.operators.trigger_dagrun import TriggerDagRunOperator
 from airflow.utils.dates import days_ago
+from airflow.models import Variable
 
+# Retrieve environment-specific variables
+env = Variable.get("ENV", default_var="staging")
+if env == "dev":
+    db_connection_string = Variable.get("DEV_DB_CONNECTION_STRING")
+elif env == "staging":
+    db_connection_string = Variable.get("STAGING_DB_CONNECTION_STRING")
+else:
+    raise ValueError("Invalid environment specified")
 
 # Define the default arguments for the DAG
 default_args = {

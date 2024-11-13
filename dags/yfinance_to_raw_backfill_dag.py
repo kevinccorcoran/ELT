@@ -5,7 +5,7 @@ from airflow.models import Variable
 from datetime import datetime, timedelta
 
 # Retrieve environment-specific variables
-env = Variable.get("ENV", default_var="dev")
+env = Variable.get("ENV", default_var="staging")
 if env == "dev":
     db_connection_string = Variable.get("DEV_DB_CONNECTION_STRING")
 elif env == "staging":

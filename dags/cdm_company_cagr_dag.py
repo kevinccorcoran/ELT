@@ -38,11 +38,10 @@ with DAG(
         sql="SELECT 1;",
     )
 
-    # Task to run a DBT command or any bash command
     dbt_run = BashOperator(
         task_id='dbt_run_model_cagr_metric',
-        bash_command='cd /Users/kevin/Dropbox/applications/ELT/dbt/src/app/models/app/metrics/ && dbt run --models company_cagr',
-    )
+        bash_command='export ENV={{ var.value.ENV }} && echo "Airflow ENV: $ENV" && cd /Users/kevin/Dropbox/applications/ELT/dbt/src/app && dbt run --models company_cagr',
+        )
 
     # Task to trigger cdm_historical_daily_main_clean_dag
     trigger_metrics_ticker_movement_analysis_dag = TriggerDagRunOperator(
