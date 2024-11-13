@@ -3,15 +3,22 @@ from airflow import DAG
 from airflow.operators.bash import BashOperator
 from airflow.operators.trigger_dagrun import TriggerDagRunOperator
 from airflow.models import Variable
+from airflow.operators.python import PythonOperator
 
 # Retrieve environment-specific variables
-env = Variable.get("ENV", default_var="dev")
+env = Variable.get("ENV", default_var="staging")
 if env == "dev":
     db_connection_string = Variable.get("DEV_DB_CONNECTION_STRING")
 elif env == "staging":
     db_connection_string = Variable.get("STAGING_DB_CONNECTION_STRING")
 else:
     raise ValueError("Invalid environment specified")
+
+# Log environment
+log_env = PythonOperator(
+    task_id='log_env',
+    python_callable=lambda: print(f"Environment: {Variable.get('ENV')}"),
+)
 
 # Define the default arguments for the DAG
 default_args = {

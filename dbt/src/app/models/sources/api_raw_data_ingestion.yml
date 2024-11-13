@@ -1,7 +1,8 @@
-# version: 2
+version: 2
 
 sources:
   - name: raw
-    schema: raw  # The actual schema name in your database where your raw tables are
+    database: "{{ env_var('ENV') }}"
+    schema: raw
     tables:
       - name: api_raw_data_ingestion
