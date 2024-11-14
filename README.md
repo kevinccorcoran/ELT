@@ -30,6 +30,12 @@ This project establishes an Extract, Load, and Transform (ELT) data pipeline wit
 - PostgreSQL
 - Git
 - **APIs**: `yfinance` and `Polygon.io` for data ingestion of financial and stock market information
+- **Python Libraries**:
+  - pandas
+  - PySpark
+  - Plotly
+- **Optional Tools**:
+  - Google Colab
 
 ### Installation
 
