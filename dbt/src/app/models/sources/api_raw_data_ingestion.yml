@@ -1,0 +1,8 @@
+version: 2
+
+sources:
+  - name: raw
+    database: "{{ env_var('ENV') }}"
+    schema: raw
+    tables:
+      - name: api_raw_data_ingestion

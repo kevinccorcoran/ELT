@@ -1,0 +1,8 @@
+version: 2
+
+sources:
+  - name: cdm
+    database: "{{ env_var('ENV') }}"  # Dynamically set based on environment
+    schema: cdm
+    tables:
+      - name: date_lookup
