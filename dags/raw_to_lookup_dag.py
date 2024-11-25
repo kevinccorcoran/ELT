@@ -9,7 +9,7 @@ from airflow.operators.python import PythonOperator
 
 # Retrieve the environment-specific connection string variable
 env = Variable.get("ENV", default_var="staging")
-if env == "DEV":
+if env == "dev":
     db_connection_string = Variable.get("DEV_DB_CONNECTION_STRING")
 elif env == "staging":
     db_connection_string = Variable.get("STAGING_DB_CONNECTION_STRING")
@@ -57,9 +57,9 @@ with DAG(
     env_vars = {
         'DB_CONNECTION_STRING': db_connection_string,
         'ENV': env,
-        'JAVA_HOME': '/usr/local/opt/openjdk@11',  # Ensure JAVA_HOME is correctly set
+        'JAVA_HOME': '/usr/local/opt/openjdk@11',
         'PATH': '/Users/kevin/.pyenv/shims:/usr/local/bin:/usr/bin:/bin',
-        'PYTHONPATH': '/Users/kevin/Dropbox/applications/ELT/python/src',  # Add PYTHONPATH to locate dev module
+        'PYTHONPATH': '/Users/kevin/Dropbox/applications/ELT/python/src',
     }
 
     # Task to execute the ETL script
