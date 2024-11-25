@@ -34,13 +34,24 @@ with DAG(
         sql="SELECT 1;",
     )
 
-    dbt_run = BashOperator(
+    dbt_run_company_cagr = BashOperator(
         task_id='dbt_run_model_cagr_metric',
         bash_command=(
             'export ENV={{ var.value.ENV }} && '
             'echo "Airflow ENV: $ENV" && '
             'cd /Users/kevin/Dropbox/applications/ELT/dbt/src/app && '
             'dbt run --models company_cagr'
+        ),
+    )
+
+    # Task to run a DBT command
+    dbt_run_ticker_counts_by_date = BashOperator(
+        task_id='dbt_run_model_next_n_cagr_ratios',
+        bash_command=(
+            'export ENV={{ var.value.ENV }} && '
+            'echo "Airflow ENV: $ENV" && '
+            'cd /Users/kevin/Dropbox/applications/ELT/dbt/src/app && '
+            'dbt run --models ticker_counts_by_date'
         ),
     )
 
@@ -65,7 +76,8 @@ with DAG(
     # Set task dependencies
     (
         test_connection 
-        >> dbt_run 
+        >> dbt_run_company_cagr
+        >> dbt_run_ticker_counts_by_date
         >> trigger_metrics_ticker_movement_analysis_dag 
         >> trigger_metrics_cagr_metrics_dag 
         >> trigger_metrics_next_n_cagr_ratios_dag

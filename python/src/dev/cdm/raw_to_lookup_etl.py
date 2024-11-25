@@ -13,7 +13,7 @@ sys.path.append('/Users/kevin/Dropbox/applications/ELT/python/src')
 
 # Retrieve environment-specific JDBC connection string
 env = Variable.get("ENV", default_var="staging")
-if env == "DEV":
+if env == "dev":
     db_connection_string = Variable.get("JDBC_DEV_DB_CONNECTION_STRING")
 elif env == "staging":
     db_connection_string = Variable.get("JDBC_STAGING_DB_CONNECTION_STRING")
