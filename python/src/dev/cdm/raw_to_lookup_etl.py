@@ -39,7 +39,7 @@ try:
     df = spark.read \
         .format("jdbc") \
         .option("url", db_connection_string) \
-        .option("dbtable", "raw.api_raw_data_ingestion") \
+        .option("dbtable", "cdm.api_cdm_data_ingestion") \
         .option("user", db_user) \
         .option("password", db_password) \
         .option("driver", "org.postgresql.Driver") \

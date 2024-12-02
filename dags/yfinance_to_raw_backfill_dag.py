@@ -47,12 +47,12 @@ backfill_yfinance_data = BashOperator(
     dag=backfill_dag,
 )
 
-# Trigger the DAG that creates the cdm.fibonacci_transform_dates table
-trigger_raw_to_lookup_dag = TriggerDagRunOperator(
-    task_id='trigger_dag_for_cdm_fibonacci_transform_dates_lookup_table',
-    trigger_dag_id="raw_to_lookup_dag",  # The ID of the DAG to trigger
+# Task to trigger the next DAG for creating the cdm.fibonacci_transform_dates table
+trigger_api_cdm_data_ingestion = TriggerDagRunOperator(
+    task_id='trigger_dag_for_cdm_api_cdm_data_ingestion_table',
+    trigger_dag_id="raw_to_api_cdm_data_ingestion_dag",  # ID of the DAG to trigger
     dag=backfill_dag,
 )
 
 # Set task dependencies
-backfill_yfinance_data >> trigger_raw_to_lookup_dag
+backfill_yfinance_data >> trigger_api_cdm_data_ingestion

@@ -1,0 +1,8 @@
+version: 2
+
+sources:
+  - name: cdm
+    database: "{{ env_var('ENV') }}"
+    schema: cdm
+    tables:
+      - name: api_cdm_data_ingestion

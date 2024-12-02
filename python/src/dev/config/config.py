@@ -1,7 +1,8 @@
-#TICKERS = ['AAPL']
+#TICKERS = ['DHR','MSFT']
+#TICKERS = ['DIS','CSL','EFX','DDS','CHD']
+#TICKERS = ['NET','DIS']
 
-
-# # Full list 
+# Full list 
 TICKERS = ['A', 'AA', 'AACT', 'AACT.U', 'AACT.WS', 'AAM', 'AAM.U', 'AAM.WS', 'AAP', 'AAT', 
 'AB', 'ABBV', 'ABC', 'ABCB', 'ABEV', 'ABG', 'ABM', 'ABR', 'ABRpD', 'ABRpE', 
 'ABRpF', 'ABT', 'ABX', 'AC', 'ACA', 'ACCO', 'ACEL', 'ACHR', 'ACHR.WS', 'ACI', 
