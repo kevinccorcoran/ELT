@@ -15,7 +15,7 @@ WITH history_data AS (
         date,
         close
     FROM
-        {{ source('raw', 'api_raw_data_ingestion') }}
+        {{ source('cdm', 'api_cdm_data_ingestion') }}
 ),
 
 filtered_fibonacci_dates AS (

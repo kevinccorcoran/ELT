@@ -13,7 +13,7 @@ sys.path.append('/Users/kevin/Dropbox/applications/ELT/python/src')
 
 # Retrieve environment-specific JDBC connection string
 env = Variable.get("ENV", default_var="staging")
-if env == "DEV":
+if env == "dev":
     db_connection_string = Variable.get("JDBC_DEV_DB_CONNECTION_STRING")
 elif env == "staging":
     db_connection_string = Variable.get("JDBC_STAGING_DB_CONNECTION_STRING")
@@ -39,7 +39,7 @@ try:
     df = spark.read \
         .format("jdbc") \
         .option("url", db_connection_string) \
-        .option("dbtable", "raw.api_raw_data_ingestion") \
+        .option("dbtable", "cdm.api_cdm_data_ingestion") \
         .option("user", db_user) \
         .option("password", db_password) \
         .option("driver", "org.postgresql.Driver") \
