@@ -15,6 +15,17 @@ api_raw_data_ingestion as (
     order by
         date desc
 ), 
+api_cdm_data_ingestion as (
+    select
+        date,
+        count(distinct ticker) as "cdm.api_cdm_data_ingestion"
+    from
+        {{ source('cdm', 'api_cdm_data_ingestion') }}
+    group by
+        date
+    order by
+        date desc
+), 
 date_lookup as (
     SELECT
         current_date AS "date",          
@@ -32,10 +43,14 @@ company_cagr as (
 select
     ardi.date,
     "raw.api_raw_data_ingestion",
+    "cdm.api_cdm_data_ingestion",
     "cdm.date_lookup",
     "cdm.company_cagr" 
 from
     api_raw_data_ingestion ardi
+left join
+    api_cdm_data_ingestion acdi
+    on ardi.date = acdi.date
 left join 
     date_lookup dl
     on ardi.date = dl.date
@@ -43,9 +58,7 @@ left join
     company_cagr cc
     on ardi.date = cc.date
 
-where 
-    ardi.date > (SELECT MAX(date) FROM "data_governance"."ticker_counts_by_date")
-    
+
     {% if is_incremental() %}
     and ardi.date > (SELECT MAX(date) FROM {{ this }})
     {% endif %}
