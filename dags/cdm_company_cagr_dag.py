@@ -34,7 +34,7 @@ with DAG(
         sql="SELECT 1;",
     )
 
-    dbt_run = BashOperator(
+    dbt_run_company_cagr = BashOperator(
         task_id='dbt_run_model_cagr_metric',
         bash_command=(
             'export ENV={{ var.value.ENV }} && '
@@ -62,10 +62,16 @@ with DAG(
         trigger_dag_id="metric_next_n_cagr_ratios_dag",
     )
 
+    # Task to trigger metrics_next_n_cagr_ratios_dag
+    trigger_cdm_ticker_count_by_date_dag = TriggerDagRunOperator(
+        task_id='trigger_cdm_ticker_count_by_date_model',
+        trigger_dag_id="cdm_ticker_count_by_date_dag",
+    )
+
     # Set task dependencies
     (
         test_connection 
-        >> dbt_run 
+        >> dbt_run_company_cagr
         >> trigger_metrics_ticker_movement_analysis_dag 
         >> trigger_metrics_cagr_metrics_dag 
         >> trigger_metrics_next_n_cagr_ratios_dag

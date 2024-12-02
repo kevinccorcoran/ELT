@@ -33,19 +33,18 @@ default_args = {
 
 # Define the DAG
 dag = DAG(
-    dag_id="yfinance_to_raw_test_dag",
+    dag_id="raw_to_api_cdm_data_ingestion_dag",
     default_args=default_args,
-    description="DAG to run a Python script that updates raw.",
+    description="DAG to run a Python script that updates cdm.raw_to_api_cdm_data_ingestion",
     schedule_interval=None,  # Run only when manually triggered
     catchup=False,  # Ensures it does not backfill from start_date to now
 )
 
 # Task to run the yfinance_to_raw_etl.py Python script, passing environment-specific DB connection
-fetch_yfinance_data = BashOperator(
-    task_id='fetch_yfinance_data',
+insert_api_cdm_data_ingestion = BashOperator(
+    task_id='insert_api_cdm_data_ingestion',
     bash_command=(
-        '/Users/kevin/.pyenv/shims/python3 /Users/kevin/Dropbox/applications/ELT/python/src/dev/raw/yfinance_to_raw_etl.py '
-        '--start_date "1950-01-01" --end_date "{{ macros.ds_add(ds, 0) }}"'
+        '/Users/kevin/.pyenv/shims/python3 /Users/kevin/Dropbox/applications/ELT/python/src/dev/cdm/api_cdm_data_ingestion.py '
     ),
     env={
         'DB_CONNECTION_STRING': db_connection_string,
@@ -55,11 +54,11 @@ fetch_yfinance_data = BashOperator(
 )
 
 # Task to trigger the next DAG for creating the cdm.fibonacci_transform_dates table
-trigger_api_cdm_data_ingestion = TriggerDagRunOperator(
-    task_id='trigger_dag_for_cdm_api_cdm_data_ingestion_table',
-    trigger_dag_id="raw_to_api_cdm_data_ingestion_dag",  # ID of the DAG to trigger
+trigger_raw_to_lookup_dag = TriggerDagRunOperator(
+    task_id='trigger_dag_for_cdm_fibonacci_transform_dates_lookup_table',
+    trigger_dag_id="raw_to_lookup_dag",  # ID of the DAG to trigger
     dag=dag,
 )
 
 # Set task dependencies
-fetch_yfinance_data >> trigger_api_cdm_data_ingestion
+insert_api_cdm_data_ingestion >> trigger_raw_to_lookup_dag
