@@ -7,7 +7,7 @@ with
 api_raw_data_ingestion as (
     select
         date,
-        count(distinct ticker) as "raw.api_raw_data_ingestion"
+        count(distinct ticker) as "raw_api_raw_data_ingestion"
     from
         {{ source('raw', 'api_raw_data_ingestion') }}
     group by
@@ -18,7 +18,7 @@ api_raw_data_ingestion as (
 api_cdm_data_ingestion as (
     select
         date,
-        count(distinct ticker) as "cdm.api_cdm_data_ingestion"
+        count(distinct ticker) as "cdm_api_cdm_data_ingestion"
     from
         {{ source('cdm', 'api_cdm_data_ingestion') }}
     group by
@@ -29,28 +29,28 @@ api_cdm_data_ingestion as (
 date_lookup as (
     SELECT
         current_date AS "date",          
-        COUNT(DISTINCT ticker) AS "cdm.date_lookup" 
+        COUNT(DISTINCT ticker) AS "cdm_date_lookup" 
     FROM
         {{ source('cdm', 'date_lookup') }}
 ), 
 company_cagr as (
     SELECT
         current_date AS "date",          
-        COUNT(DISTINCT ticker) AS "cdm.company_cagr" 
+        COUNT(DISTINCT ticker) AS "cdm_company_cagr" 
     FROM
         {{ ref('company_cagr') }}
 )
 select
     ardi.date,
-    "raw.api_raw_data_ingestion",
-    "cdm.api_cdm_data_ingestion",
-    "cdm.date_lookup",
-    "cdm.company_cagr" 
+    "raw_api_raw_data_ingestion",
+    "cdm_api_cdm_data_ingestion",
+    "cdm_date_lookup",
+    "cdm_company_cagr" 
 from
     api_raw_data_ingestion ardi
 left join
     api_cdm_data_ingestion acdi
-    on ardi.date = acdi.date
+    on ardi.date::date = acdi.date::date
 left join 
     date_lookup dl
     on ardi.date = dl.date
