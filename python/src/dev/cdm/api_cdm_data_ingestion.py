@@ -2,10 +2,11 @@ import sys
 import os
 import polars as pl
 import psycopg2
+from decimal import Decimal
 import io
+from datetime import datetime, timedelta
 
-sys.path.append('/Users/kevin/Dropbox/applications/ELT/python/src/')
-
+# Ensure the connection string is set
 connection_string = os.getenv('DB_CONNECTION_STRING')
 if not connection_string:
     print("DB_CONNECTION_STRING environment variable not set")
@@ -15,6 +16,8 @@ try:
     with psycopg2.connect(connection_string) as conn:
         schema_name = 'raw'
         table_name = 'api_raw_data_ingestion'
+        target_schema = 'cdm'
+        target_table = 'api_cdm_data_ingestion'
 
         query = f"SELECT * FROM {schema_name}.{table_name}"
         with conn.cursor() as cursor:
@@ -22,185 +25,121 @@ try:
             data = cursor.fetchall()
             colnames = [desc[0] for desc in cursor.description]
 
-        # Log initial data
-        print("Sample data:", data[:5])
+        # Define schema for Polars DataFrame explicitly
+        schema = {
+            "date": pl.Date,
+            "open": pl.Float64,
+            "high": pl.Float64,
+            "low": pl.Float64,
+            "close": pl.Float64,
+            "volume": pl.Int64,
+            "dividends": pl.Float64,
+            "Stock Splits": pl.Float64,
+            "ticker": pl.Utf8,
+            "processed_at": pl.Datetime,
+            "adj_close": pl.Float64,
+            "Capital Gains": pl.Utf8,
+            "ticker_date_id": pl.Utf8,
+        }
+
+        # Convert Decimal to float and prepare data as list of dicts
+        def clean_row(row):
+            return {
+                col: (
+                    float(val) if isinstance(val, Decimal) else
+                    None if val is None else
+                    val
+                )
+                for col, val in zip(colnames, row)
+            }
+
+        cleaned_data = [clean_row(row) for row in data]
+
+        # Create Polars DataFrame with explicit schema
+        pl_df = pl.DataFrame(cleaned_data, schema=schema)
+
+        # Debug: Log initial data
+        print("Sample cleaned data:", cleaned_data[:5])
         print("Column names:", colnames)
-
-        # Create Polars DataFrame
-        pl_df = pl.DataFrame(data, schema=colnames, orient="row")
         print("Initial DataFrame Schema:", pl_df.schema)
-        print("Sample Initial Rows:", pl_df.head())
 
-        # Transform DataFrame
-        pl_df = pl_df.with_columns([
-            pl.col("volume").fill_null(0).alias("volume"),
-            pl.col("open").fill_null(-1).alias("open"),
-            pl.col("close").fill_null(-1).alias("close"),
-             pl.col("Stock Splits").cast(pl.Float64),
-            pl.when(pl.col("date").is_null())
-            .then(pl.lit("synthetic"))
-            .otherwise(pl.lit("natural"))
-            .alias("date_type"),
+        # Add missing synthetic rows and forward-fill data
+        def generate_full_date_range(df):
+            unique_tickers = df.select(pl.col("ticker")).unique().to_series().to_list()
+            full_data = []
+            for ticker in unique_tickers:
+                ticker_data = df.filter(pl.col("ticker") == ticker)
+                min_date = ticker_data.select(pl.col("date").min())[0, 0]
+                max_date = ticker_data.select(pl.col("date").max())[0, 0]
+                date_range = [min_date + timedelta(days=i) for i in range((max_date - min_date).days + 1)]
+                full_dates = pl.DataFrame({
+                    "date": date_range,
+                    "ticker": [ticker] * len(date_range),
+                })
+                joined_data = full_dates.join(ticker_data, on=["date", "ticker"], how="left")
+                joined_data = joined_data.with_columns(
+                    pl.when(pl.col("open").is_null())
+                    .then(pl.lit("synthetic"))
+                    .otherwise(pl.lit("natural"))
+                    .alias("date_type")
+                )
+                full_data.append(joined_data)
+            return pl.concat(full_data)
+
+        full_pl_df = generate_full_date_range(pl_df)
+
+        # Forward-fill missing values
+        full_pl_df = full_pl_df.sort(["ticker", "date"]).with_columns(
+            [
+                pl.col("open").forward_fill().alias("open"),
+                pl.col("high").forward_fill().alias("high"),
+                pl.col("low").forward_fill().alias("low"),
+                pl.col("close").forward_fill().alias("close"),
+                pl.col("adj_close").forward_fill().alias("adj_close"),
+                pl.col("processed_at").forward_fill().alias("processed_at"),
+            ]
+        )
+
+        # Calculate `ticker_date_id`
+        full_pl_df = full_pl_df.with_columns(
+            (pl.col("ticker") + "_" + pl.col("date").cast(pl.Utf8)).alias("ticker_date_id")
+        )
+
+        # Reorder columns for PostgreSQL compatibility
+        full_pl_df = full_pl_df.select([
+            "date", "ticker", "open", "high", "low", "close", "volume",
+            "dividends", "Stock Splits", "processed_at", "adj_close",
+            "Capital Gains", "date_type", "ticker_date_id"
         ])
 
         # Debug transformed DataFrame
-        print("Transformed DataFrame Schema:", pl_df.schema)
-        print("Sample Rows After Transformation:", pl_df.head())
+        print("Transformed DataFrame Schema:", full_pl_df.schema)
+        print("Sample Rows After Transformation:", full_pl_df.head())
 
-        # Recalculate 'ticker_date_id'
-        pl_df = pl_df.with_columns([
-            (pl.col("ticker") + "_" + pl.col("date").cast(pl.Utf8)).alias("ticker_date_id")
-        ])
-        print("After recalculating `ticker_date_id`:")
-        print(pl_df.head())
+        # Insert into target PostgreSQL table
+        batch_size = 10000
+        num_rows = full_pl_df.shape[0]
+        for start in range(0, num_rows, batch_size):
+            end = min(start + batch_size, num_rows)
+            batch = full_pl_df[start:end]
 
-        # Save DataFrame to PostgreSQL
-        csv_buffer = io.StringIO()
-        pl_df.to_pandas().to_csv(csv_buffer, index=False)
-        csv_buffer.seek(0)
+            csv_buffer = io.StringIO()
+            batch.write_csv(csv_buffer)
+            csv_buffer.seek(0)
 
-        target_schema = "cdm"
-        target_table = "api_cdm_data_ingestion"
-        with conn.cursor() as cursor:
-            cursor.copy_expert(
-                f"COPY {target_schema}.{target_table} FROM STDIN WITH (FORMAT CSV, HEADER TRUE)",
-                csv_buffer
-            )
-        conn.commit()
-        print(f"Data successfully saved to {target_schema}.{target_table}")
+            with conn.cursor() as cursor:
+                cursor.copy_expert(
+                    f"""COPY {target_schema}.{target_table} (
+                        "date", ticker, "open", high, low, "close", volume,
+                        dividends, "Stock Splits", processed_at, adj_close,
+                        "Capital Gains", date_type, ticker_date_id
+                    ) FROM STDIN WITH (FORMAT CSV, HEADER TRUE)""",
+                    csv_buffer
+                )
+            conn.commit()
+            print(f"Batch of {len(batch)} rows saved.")
 
+except psycopg2.Error as db_err:
+    print(f"Database error: {db_err}")
 except Exception as e:
-    print(f"Error: {e}")
-
-
-
-
-
-
-
-
-# import sys
-# import os
-# import polars as pl
-# import psycopg2
-# import io
-
-# # Add application directory to system path for custom module access
-# sys.path.append('/Users/kevin/Dropbox/applications/ELT/python/src/')
-
-# # Retrieve the connection string from environment variables
-# connection_string = os.getenv('DB_CONNECTION_STRING')
-
-# if connection_string is None:
-#     print("DB_CONNECTION_STRING environment variable not set")
-# else:
-#     try:
-#         # Establish connection using psycopg2
-#         with psycopg2.connect(connection_string) as conn:
-#             # Define schema and table details
-#             schema_name = 'raw'
-#             table_name = 'api_raw_data_ingestion'
-
-#             # Create a SQL query to fetch data
-#             query = f"SELECT * FROM {schema_name}.{table_name}"
-
-#             # Fetch data as Polars DataFrame
-#             with conn.cursor() as cursor:
-#                 cursor.execute(query)
-#                 data = cursor.fetchall()
-#                 colnames = [desc[0] for desc in cursor.description]
-#                 pl_df = pl.DataFrame(data, schema=colnames, orient="row")
-
-#             # Debug: Print schema and columns
-#             print("Initial DataFrame Schema:")
-#             print(pl_df.schema)
-#             print("Columns in DataFrame:", pl_df.columns)
-
-#             # Process the DataFrame
-#             pl_df = pl_df.with_columns([
-#                 pl.col("date").cast(pl.Date),
-#                 pl.col("ticker").cast(pl.Utf8),
-#                 pl.col("open").cast(pl.Float64),
-#                 pl.col("high").cast(pl.Float64),
-#                 pl.col("low").cast(pl.Float64),
-#                 pl.col("close").cast(pl.Float64),
-#                 pl.col("volume").cast(pl.Int64),  # Cast volume to Int64 for BIGINT compatibility
-#                 pl.col("Dividends").cast(pl.Float64),
-#                 pl.col("Stock Splits").cast(pl.Float64),
-#                 pl.col("processed_at").cast(pl.Datetime),
-#                 pl.col("adj_close").cast(pl.Float64),
-#                 pl.col("Capital Gains").cast(pl.Utf8),
-#                 pl.col("ticker_date_id").cast(pl.Utf8)
-#             ])
-
-#             # Add synthetic dates and fill missing values
-#             ticker_dates = pl_df.group_by("ticker").agg([
-#                 pl.col("date").min().alias("min_date"),
-#                 pl.col("date").max().alias("max_date")
-#             ])
-
-#             # Generate full date ranges for each ticker
-#             date_ranges = []
-#             for row in ticker_dates.iter_rows(named=True):
-#                 date_range_df = pl.select(
-#                     pl.date_range(
-#                         start=row["min_date"],
-#                         end=row["max_date"],
-#                         interval="1d"
-#                     ).alias("date")
-#                 ).with_columns([
-#                     pl.lit(row["ticker"]).alias("ticker")
-#                 ])
-#                 date_ranges.append(date_range_df)
-
-#             all_dates = pl.concat(date_ranges)
-
-#             # Left join the original data onto the full date ranges
-#             pl_df_full = all_dates.join(pl_df, on=["ticker", "date"], how="left")
-
-#             # Add 'date_type' column
-#             pl_df_full = pl_df_full.with_columns([
-#                 pl.when(pl.col("open").is_null())
-#                 .then(pl.lit("synthetic"))
-#                 .otherwise(pl.lit("natural"))
-#                 .alias("date_type")
-#             ])
-
-#             # Forward-fill null values within each ticker group
-#             columns_to_fill = [col for col in pl_df_full.columns if col not in ["ticker", "date", "date_type"]]
-#             pl_df_full = pl_df_full.sort(["ticker", "date"]).with_columns([
-#                 pl.col(col).fill_null(strategy="forward").over("ticker") for col in columns_to_fill
-#             ])
-
-#             # Debug: Print final schema and DataFrame
-#             print("Final DataFrame Schema:")
-#             print(pl_df_full.schema)
-#             print("Sample rows:")
-#             print(pl_df_full.head())
-
-#             # Recalculate 'ticker_date_id' if necessary
-#             pl_df_full = pl_df_full.with_columns([
-#                 (pl.col("ticker") + "_" + pl.col("date").cast(pl.Utf8)).alias("ticker_date_id")
-#             ])
-
-#             # Save the DataFrame to PostgreSQL
-#             try:
-#                 csv_buffer = io.StringIO()
-#                 pl_df_full.to_pandas().to_csv(csv_buffer, index=False)
-#                 csv_buffer.seek(0)
-
-#                 target_schema = "cdm"
-#                 target_table = "api_cdm_data_ingestion"
-
-#                 with conn.cursor() as cursor:
-#                     cursor.copy_expert(
-#                         f"COPY {target_schema}.{target_table} FROM STDIN WITH (FORMAT CSV, HEADER TRUE)",
-#                         csv_buffer
-#                     )
-#                 conn.commit()
-#                 print(f"Data successfully saved to {target_schema}.{target_table}")
-#             except Exception as e:
-#                 print(f"Error while saving data: {e}")
-
-#     except Exception as e:
-#         print(f"Unexpected error occurred: {e}")
+    print(f"Unexpected error: {e}")
