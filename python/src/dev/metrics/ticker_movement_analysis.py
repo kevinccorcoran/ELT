@@ -16,6 +16,20 @@ if connection_string is None:
     print("DB_CONNECTION_STRING environment variable not set")
 else:
     try:
+        # Connect to the database
+        conn = pg_dbapi.connect(connection_string)
+        cur = conn.cursor()
+
+        # Truncate the table before running the main process
+        # Adjust schema and table names if needed
+        truncate_statement = "TRUNCATE TABLE metrics.ticker_movement_analysis;"
+        cur.execute(truncate_statement)
+        conn.commit()
+
+        # Close cursor and connection before running the main logic (optional but recommended)
+        cur.close()
+        conn.close()
+
         # Define schema and table details
         schema_name = 'cdm'  # Set the appropriate schema name
         table_name = 'company_cagr'
@@ -40,7 +54,7 @@ else:
             # Display calculated transitions
             print(transitions)
 
-            # Save transitions DataFrame to the database
+            # Save transitions DataFrame back to the database
             save_to_database(transitions, 'ticker_movement_analysis', connection_string, 'metrics')
 
         else:
