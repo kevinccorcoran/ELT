@@ -44,6 +44,8 @@ dag = DAG(
 fetch_yfinance_data = BashOperator(
     task_id='fetch_yfinance_data',
     bash_command=(
+        'export ENV={{ var.value.ENV }} && '
+        'echo "Airflow ENV: $ENV" && '
         '/Users/kevin/.pyenv/shims/python3 /Users/kevin/Dropbox/applications/ELT/python/src/dev/raw/yfinance_to_raw_etl.py '
         '--start_date "1950-01-01" --end_date "{{ macros.ds_add(ds, 0) }}"'
     ),
