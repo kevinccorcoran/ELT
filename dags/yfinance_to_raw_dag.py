@@ -33,14 +33,17 @@ dag = DAG(
     dag_id="yfinance_to_raw",
     default_args=default_args,
     description="DAG to run a Python script that updates raw.",
-    schedule_interval="0 22 * * *",  # Run daily at 10 PM UTC
+    schedule_interval="45 23 * * *",  # Run daily at 23:45 UTC
     catchup=False,
 )
 
-# Task to run the yfinance_to_raw_etl.py script, fetching data from the yfinance API and saving it into the PostgreSQL table dev.raw.yfinance_to_raw_etl
 fetch_yfinance_data = BashOperator(
-    task_id='fetched_yfinance_data',
-    bash_command='python /Users/kevin/Dropbox/applications/ELT/python/src/dev/raw/yfinance_to_raw_etl.py',
+    task_id='fetch_yfinance_data',
+    bash_command=(
+        'export ENV={{ var.value.ENV }} && '
+        'echo "Airflow ENV: $ENV" && '
+        'python /Users/kevin/Dropbox/applications/ELT/python/src/dev/raw/yfinance_to_raw_etl.py'
+    ),
     dag=dag,
 )
 
