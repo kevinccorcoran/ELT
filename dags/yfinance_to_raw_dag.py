@@ -37,13 +37,10 @@ dag = DAG(
     catchup=False,
 )
 
+# Task to run the yfinance_to_raw_etl.py script, fetching data from the yfinance API and saving it into the PostgreSQL table dev.raw.yfinance_to_raw_etl
 fetch_yfinance_data = BashOperator(
-    task_id='fetch_yfinance_data',
-    bash_command=(
-        'export ENV={{ var.value.ENV }} && '
-        'echo "Airflow ENV: $ENV" && '
-        'python /Users/kevin/Dropbox/applications/ELT/python/src/dev/raw/yfinance_to_raw_etl.py'
-    ),
+    task_id='fetched_yfinance_data',
+    bash_command='python /Users/kevin/Dropbox/applications/ELT/python/src/dev/raw/yfinance_to_raw_etl.py',
     dag=dag,
 )
 
