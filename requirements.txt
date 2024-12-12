@@ -167,8 +167,6 @@ matplotlib-inline==0.1.6
 matrix-common==1.3.0
 matrix-nio==0.24.0
 matrix-synapse==1.102.0
-# Editable install with no version control (matrix_client==0.4.0)
--e /Users/kevin/Dropbox/applications/ELT/matrix-python-sdk
 mdit-py-plugins==0.4.0
 mdurl==0.1.2
 minimal-snowplow-tracker==0.0.2
