@@ -6,3 +6,4 @@ requests
 numpy
 flask==2.2.5
 pandas==2.2.0
+gunicorn
