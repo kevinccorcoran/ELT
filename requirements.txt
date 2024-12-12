@@ -88,7 +88,7 @@ Flask-Limiter==3.5.0
 Flask-Login==0.6.3
 Flask-Migrate==4.0.5
 Flask-SQLAlchemy==2.5.1
-Flask-Session==0.7.0
+flask-session==0.7.0
 Flask-WTF==1.2.1
 flower==2.0.1
 fqdn==1.5.1
