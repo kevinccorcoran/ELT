@@ -6,3 +6,4 @@ requests
 numpy
 pandas==2.2.0
 gunicorn
+flask-session==2.2.5
