@@ -281,7 +281,7 @@ soupsieve==2.5
 SQLAlchemy==1.4.51
 SQLAlchemy-JSONField==1.0.2
 SQLAlchemy-Utils==0.41.1
-sqlfluff==3.0.1
+sqlfluff==3.0.4
 sqlfluff-templater-dbt==3.0.4
 sqlparse==0.4.4
 stack-data==0.6.3
