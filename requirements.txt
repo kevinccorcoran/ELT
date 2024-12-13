@@ -5,6 +5,7 @@ async-timeout==4.0.2
 caffeine==0.5
 cattrs==22.2.0
 dbt-postgres==1.7.0
+Flask==2.2.3
 flask-migrate==4.0.5
 fqdn==1.5.1
 functions-framework==3.5.0
