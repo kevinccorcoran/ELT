@@ -1,3 +1,3 @@
-worker: airflow scheduler
-web: airflow webserver -p $PORT
-web: gunicorn app:app
+web: airflow webserver
+worker: airflow celery worker
+scheduler: airflow scheduler
