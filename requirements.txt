@@ -1,9 +1,9 @@
 adbc_driver_postgresql==0.10.0
 apache-airflow==2.5.3
-Flask==2.2.5
-flask-session==0.4.0
+Flask==1.1.2
+flask-session==0.3.2
 pandas==2.2.0
-pendulum==3.0.0
+pendulum==2.1.2
 polars==1.15.0
 psycopg2==2.9.6
 psycopg2_binary==2.9.9
@@ -13,4 +13,4 @@ python-dotenv==1.0.1
 Requests==2.31.0
 SQLAlchemy==1.4.51
 yfinance==0.2.49
-Werkzeug==2.2.3
+Werkzeug==1.0.1
