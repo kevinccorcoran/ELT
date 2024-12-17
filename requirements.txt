@@ -1,7 +1,7 @@
 adbc_driver_postgresql==0.10.0
 apache-airflow==2.5.3
 Flask==2.2.5
-flask-session==0.3.2
+flask-session==0.4.0
 pandas==2.2.0
 pendulum==3.0.0
 polars==1.15.0
