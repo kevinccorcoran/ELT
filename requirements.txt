@@ -1,6 +1,6 @@
 adbc_driver_postgresql==0.10.0
 apache-airflow==2.8.1
-connexion[swagger-ui]==2.13.0
+connexion[swagger-ui]==2.14.2
 Flask>=2.2,<2.3
 flask-session==0.4.0
 pandas==2.2.0
