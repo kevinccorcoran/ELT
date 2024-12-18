@@ -1,3 +1,9 @@
+*.log
+*.sqlite
+
+#airflow
+airflow_env/
+
 .vscode
 
 # .env
@@ -5,7 +11,6 @@
 
 # Python cache files
 __pycache__/
-__pycache__
 *.pyc
 .pytest_cache
 
@@ -40,3 +45,4 @@ Thumbs.db
 # Ignore dbt profiles file
 profiles.yml
 pytest_tests/matrix_notify
+airflow_env/
