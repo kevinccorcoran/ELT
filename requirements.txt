@@ -1,4 +1,5 @@
 apache-airflow==2.9.3
+connexion==2.14.1
 SQLAlchemy==1.4.51
 Flask>=2.2,<2.3
 flask-session==0.4.0
