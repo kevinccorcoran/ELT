@@ -46,3 +46,4 @@ Thumbs.db
 profiles.yml
 pytest_tests/matrix_notify
 airflow_env/
+config/*.cfg
