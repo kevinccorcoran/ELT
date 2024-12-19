@@ -2,14 +2,23 @@ from datetime import datetime, timedelta
 from airflow import DAG
 from airflow.operators.bash import BashOperator
 from airflow.operators.trigger_dagrun import TriggerDagRunOperator
-import os
+from airflow.models import Variable
+from airflow.operators.python import PythonOperator
 
-# Retrieve environment-specific variables from environment variables
-env = os.getenv("ENV", "staging")  # Default to staging
-db_connection_string = os.getenv("DB_CONNECTION_STRING", "")
+# Retrieve environment-specific variables
+env = Variable.get("ENV", default_var="staging")
+if env == "dev":
+    db_connection_string = Variable.get("DEV_DB_CONNECTION_STRING")
+elif env == "staging":
+    db_connection_string = Variable.get("STAGING_DB_CONNECTION_STRING")
+else:
+    raise ValueError("Invalid environment specified")
 
-if not db_connection_string:
-    raise ValueError("DB_CONNECTION_STRING is not set in the environment")
+# Log environment
+log_env = PythonOperator(
+    task_id='log_env',
+    python_callable=lambda: print(f"Environment: {Variable.get('ENV')}"),
+)
 
 # Define the default arguments for the DAG
 default_args = {
@@ -37,7 +46,7 @@ fetch_yfinance_data = BashOperator(
     bash_command=(
         'export ENV={{ var.value.ENV }} && '
         'echo "Airflow ENV: $ENV" && '
-        'python /app/python/src/dev/raw/yfinance_to_raw_etl.py '
+        '/Users/kevin/.pyenv/shims/python3 /Users/kevin/Dropbox/applications/ELT/python/src/dev/raw/yfinance_to_raw_etl.py '
         '--start_date "1950-01-01" --end_date "{{ macros.ds_add(ds, 0) }}"'
     ),
     env={
