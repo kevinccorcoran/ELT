@@ -1,5 +1,8 @@
 # Airflow core
 apache-airflow==2.9.3
+apache-airflow-providers-common-sql==1.3.0
+apache-airflow-providers-http==4.13.3
+apache-airflow-providers-postgres==5.14.0
 
 # Web framework and session management
 Flask>=2.2,<2.3
@@ -28,3 +31,5 @@ python-dotenv==1.0.1
 # HTTP requests and external data fetching
 requests==2.31.0
 yfinance==0.2.49
+
+
