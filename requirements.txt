@@ -1,16 +1,33 @@
+# Airflow core
 apache-airflow==2.9.3
-connexion==2.14.1
-SQLAlchemy==1.4.51
+
+# Airflow providers (ensure compatibility)
+apache-airflow-providers-common-sql
+
+# Web framework and session management
 Flask>=2.2,<2.3
 flask-session==0.4.0
-adbc_driver_postgresql==0.10.0
-pandas==2.2.0
-pendulum==2.1.2
-polars==1.15.0
+Werkzeug>=2.0,<2.3
+
+# Database and ORM
+SQLAlchemy>=1.4,<2.1
 psycopg2-binary==2.9.9
+
+# Apache Arrow database driver
+adbc_driver_postgresql==0.10.0
+
+# Data processing libraries
+pandas==2.2.0
+polars==1.15.0
 pyspark==3.5.1
+
+# Date and time handling
+pendulum==2.1.2
+
+# Testing and utilities
 pytest==8.1.1
 python-dotenv==1.0.1
+
+# HTTP requests and external data fetching
 requests==2.31.0
 yfinance==0.2.49
-Werkzeug>=2.0,<2.3
