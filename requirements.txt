@@ -33,4 +33,4 @@ requests==2.31.0
 yfinance==0.2.49
 
 
-dropbox==214.4.5217
+dropbox==11.36.2
