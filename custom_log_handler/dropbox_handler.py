@@ -1,42 +1,23 @@
 import logging
-import os
 import dropbox
 from airflow.utils.log.file_task_handler import FileTaskHandler
 
 class DropboxTaskHandler(FileTaskHandler):
-    def __init__(self, base_log_folder, remote_base_log_folder):
+    def __init__(self, base_log_folder, dropbox_folder, access_token):
         super().__init__(base_log_folder)
-        self.remote_base_log_folder = remote_base_log_folder.strip("/")
-        # Fetch the Dropbox access token from the environment
-        dropbox_token = os.getenv("DROPBOX_ACCESS_TOKEN")
-        if not dropbox_token:
-            raise ValueError("Environment variable DROPBOX_ACCESS_TOKEN is not set.")
-        self.client = dropbox.Dropbox(dropbox_token)
-        logging.info("Initialized DropboxTaskHandler with remote base log folder: %s", self.remote_base_log_folder)
+        self.dropbox_folder = dropbox_folder
+        self.dbx = dropbox.Dropbox(access_token)
 
-    def set_context(self, ti):
-        super().set_context(ti)
-        self.log_relative_path = f"/{self.remote_base_log_folder}/{ti.dag_id}/{ti.task_id}/{ti.execution_date}/{ti.try_number}.log"
-        logging.info("Log relative path set to: %s", self.log_relative_path)
+    def upload_to_dropbox(self, log_file):
+        try:
+            with open(log_file, "rb") as f:
+                self.dbx.files_upload(f.read(), f"{self.dropbox_folder}/{log_file}")
+        except Exception as e:
+            logging.error(f"Failed to upload log file to Dropbox: {e}")
 
     def close(self):
-        if self.handler:
-            self.handler.close()
-            local_log = self.handler.stream.name
-            try:
-                with open(local_log, "rb") as f:
-                    self.client.files_upload(f.read(), self.log_relative_path, mode=dropbox.files.WriteMode("overwrite"))
-                logging.info("Successfully uploaded log to Dropbox: %s", self.log_relative_path)
-            except Exception as e:
-                logging.error("Failed to upload log to Dropbox: %s", str(e))
-        else:
-            logging.warning("No handler found to close or upload logs.")
-
-    def read(self, task_instance):
-        try:
-            log_path = f"/{self.remote_base_log_folder}/{task_instance.dag_id}/{task_instance.task_id}/{task_instance.execution_date}/{task_instance.try_number}.log"
-            metadata, res = self.client.files_download(log_path)
-            return res.content.decode("utf-8")
-        except dropbox.exceptions.ApiError as e:
-            logging.error("Failed to retrieve log from Dropbox: %s", str(e))
-            return f"Failed to retrieve log: {str(e)}"
+        super().close()
+        # Upload logs to Dropbox
+        for handler in self.handler.handlers:
+            if hasattr(handler, "baseFilename"):
+                self.upload_to_dropbox(handler.baseFilename)
