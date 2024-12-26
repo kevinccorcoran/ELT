@@ -34,3 +34,6 @@ yfinance==0.2.49
 
 
 dropbox==11.36.2
+
+apache-airflow-providers-amazon
+boto3
