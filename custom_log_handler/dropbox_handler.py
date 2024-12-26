@@ -1,11 +1,16 @@
 import logging
+import os
 import dropbox
 from airflow.utils.log.file_task_handler import FileTaskHandler
 
 class DropboxTaskHandler(FileTaskHandler):
-    def __init__(self, base_log_folder, remote_base_log_folder, dropbox_token):
+    def __init__(self, base_log_folder, remote_base_log_folder):
         super().__init__(base_log_folder)
         self.remote_base_log_folder = remote_base_log_folder.strip("/")
+        # Fetch the Dropbox access token from the environment
+        dropbox_token = os.getenv("DROPBOX_ACCESS_TOKEN")
+        if not dropbox_token:
+            raise ValueError("Environment variable DROPBOX_ACCESS_TOKEN is not set.")
         self.client = dropbox.Dropbox(dropbox_token)
         logging.info("Initialized DropboxTaskHandler with remote base log folder: %s", self.remote_base_log_folder)
 
