@@ -1,67 +1,52 @@
 import os
 import logging
 import dropbox
-import posixpath  # Ensure cross-platform compatibility for Dropbox paths
-from airflow.utils.log.file_task_handler import FileTaskHandler
-from airflow.configuration import conf
-from airflow.utils.log.logging_mixin import LoggingMixin
+from dropbox.oauth import DropboxOAuth2FlowNoRedirect
 
+class DropboxLogHandler(logging.Handler):
+    def __init__(self, access_token, refresh_token, app_key, app_secret, dropbox_folder):
+        super().__init__()
+        if not access_token or not refresh_token or not app_key or not app_secret:
+            raise Exception("Dropbox credentials not provided.")
+        self.access_token = access_token
+        self.refresh_token = refresh_token
+        self.app_key = app_key
+        self.app_secret = app_secret
+        self.dbx = dropbox.Dropbox(self.access_token)
+        self.dropbox_folder = dropbox_folder.rstrip("/")
+        self.validate_token()
 
-class DropboxTaskHandler(FileTaskHandler, LoggingMixin):
-    """
-    A custom log handler that writes logs to a local file (via FileTaskHandler),
-    then uploads them to Dropbox for persistence.
-    """
-    def __init__(self, base_log_folder=None, dropbox_folder=None, access_token=None):
-        # Set base log folder and fallback to Airflow's default if not provided
-        default_base_log_folder = conf.get("logging", "BASE_LOG_FOLDER", fallback="/tmp/airflow_logs")
-        self.base_log_folder = base_log_folder or default_base_log_folder
-
-        # Dropbox folder where logs will be uploaded
-        self.dropbox_folder = dropbox_folder or "/airflow_logs"
-
-        # Dropbox API access token (required)
-        self.dbx = dropbox.Dropbox(access_token or os.getenv("DROPBOX_ACCESS_TOKEN"))
-
-        # Logger setup
-        self.log = logging.getLogger(self.__class__.__name__)
-
-        # Initialize parent FileTaskHandler
-        super().__init__(self.base_log_folder)
-
-    def upload_to_dropbox(self, local_log_path):
-        """
-        Upload a local log file to Dropbox.
-        """
-        if not os.path.isfile(local_log_path):
-            self.log.debug(f"Log file not found: {local_log_path}")
-            return
-
+    def validate_token(self):
         try:
-            # Get relative path to maintain directory structure
-            relative_path = os.path.relpath(local_log_path, self.base_log_folder)
-            if ".." in relative_path or relative_path.startswith("../"):
-                self.log.error(f"Invalid relative path for log: {local_log_path}")
-                return
+            self.dbx.users_get_current_account()
+        except dropbox.exceptions.AuthError:
+            self.refresh_access_token()
 
-            # Build the Dropbox file path
-            dropbox_path = posixpath.join(self.dropbox_folder, relative_path)
+    def refresh_access_token(self):
+        auth_flow = DropboxOAuth2FlowNoRedirect(
+            self.app_key, self.app_secret, token_access_type="offline"
+        )
+        response = auth_flow.refresh_token(self.refresh_token)
+        self.access_token = response.access_token
+        self.dbx = dropbox.Dropbox(self.access_token)
 
-            # Upload the file to Dropbox
-            with open(local_log_path, "rb") as f:
-                self.dbx.files_upload(
-                    f.read(),
-                    dropbox_path,
-                    mode=dropbox.files.WriteMode.overwrite
-                )
-            self.log.debug(f"Uploaded log to Dropbox: {dropbox_path}")
+    def emit(self, record: logging.LogRecord):
+        try:
+            log_entry = self.format(record) + "\n"
+            dropbox_path = f"{self.dropbox_folder}/airflow_combined.log"
+
+            try:
+                _, res = self.dbx.files_download(dropbox_path)
+                existing_data = res.content.decode("utf-8")
+            except dropbox.exceptions.ApiError:
+                existing_data = ""
+
+            updated_data = existing_data + log_entry
+
+            self.dbx.files_upload(
+                updated_data.encode("utf-8"),
+                dropbox_path,
+                mode=dropbox.files.WriteMode.overwrite
+            )
         except Exception as e:
-            self.log.error(f"Failed to upload log file to Dropbox: {e}", exc_info=True)
-
-    def close(self):
-        """
-        Close the log handler and upload the log to Dropbox.
-        """
-        super().close()
-        if hasattr(self.handler, "baseFilename"):
-            self.upload_to_dropbox(self.handler.baseFilename)
+            self.handleError(record)
