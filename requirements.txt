@@ -20,7 +20,7 @@ adbc_driver_postgresql==0.10.0
 # Data processing libraries
 pandas==2.2.0
 polars==1.15.0
-pyspark==3.5.1
+#pyspark==3.5.1
 
 # Date and time handling
 pendulum==2.1.2
