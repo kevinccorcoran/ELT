@@ -15,7 +15,11 @@ WITH history_data AS (
         date,
         close
     FROM
+<<<<<<< HEAD
         {{ source('raw', 'api_raw_data_ingestion') }}
+=======
+        {{ source('cdm', 'api_cdm_data_ingestion') }}
+>>>>>>> elt_source/spike/heroku_dag_refactoring
 ),
 
 filtered_fibonacci_dates AS (
