@@ -35,9 +35,14 @@ dag = DAG(
 fetch_yfinance_data = BashOperator(
     task_id='fetch_yfinance_data',
     bash_command=(
+        'if [ -x /app/.heroku/python/bin/python3 ]; then '
+        'PYTHON_EXEC=/app/.heroku/python/bin/python3; '
+        'else '
+        'PYTHON_EXEC=python3; '
+        'fi && '
         'export ENV={{ var.value.ENV }} && '
         'echo "Airflow ENV: $ENV" && '
-        'python3 /app/python/src/dev/raw/yfinance_to_raw_etl.py '
+        '$PYTHON_EXEC /app/python/src/dev/raw/yfinance_to_raw_etl.py '
         '--start_date "1950-01-01" --end_date "{{ macros.ds_add(ds, 0) }}"'
     ),
     env={
@@ -46,6 +51,7 @@ fetch_yfinance_data = BashOperator(
     },
     dag=dag,
 )
+
 
 # Task to trigger the next DAG for creating the cdm.fibonacci_transform_dates table
 trigger_api_cdm_data_ingestion = TriggerDagRunOperator(
