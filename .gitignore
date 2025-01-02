@@ -1,12 +1,9 @@
-<<<<<<< HEAD
-=======
 *.log
 *.sqlite
 
 #airflow
 airflow_env/
 
->>>>>>> elt_source/spike/heroku_dag_refactoring
 .vscode
 
 # .env
@@ -14,10 +11,7 @@ airflow_env/
 
 # Python cache files
 __pycache__/
-<<<<<<< HEAD
 __pycache__
-=======
->>>>>>> elt_source/spike/heroku_dag_refactoring
 *.pyc
 .pytest_cache
 
@@ -52,8 +46,5 @@ Thumbs.db
 # Ignore dbt profiles file
 profiles.yml
 pytest_tests/matrix_notify
-<<<<<<< HEAD
-=======
 airflow_env/
 config/*.cfg
->>>>>>> elt_source/spike/heroku_dag_refactoring
