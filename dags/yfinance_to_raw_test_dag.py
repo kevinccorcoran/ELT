@@ -37,7 +37,7 @@ fetch_yfinance_data = BashOperator(
     bash_command=(
         'export ENV={{ var.value.ENV }} && '
         'echo "Airflow ENV: $ENV" && '
-        'python /app/python/src/dev/raw/yfinance_to_raw_etl.py '
+        'python3 /app/python/src/dev/raw/yfinance_to_raw_etl.py '
         '--start_date "1950-01-01" --end_date "{{ macros.ds_add(ds, 0) }}"'
     ),
     env={
