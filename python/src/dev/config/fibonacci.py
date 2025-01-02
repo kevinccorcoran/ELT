@@ -9,6 +9,13 @@ def fibonacci(n):
     return sequence[:n]
 
 def cumulative_fibonacci(n, limit=2**63 - 1):
+<<<<<<< HEAD
+=======
+    """
+    Generate the cumulative sum of the first `n` Fibonacci numbers 
+    up to a given limit.
+    """
+>>>>>>> elt_source/spike/heroku_dag_refactoring
     fib_sequence = fibonacci(n)
     cumulative_sum, cumulative_fib_sequence = 0, []
     for num in fib_sequence:
@@ -18,6 +25,26 @@ def cumulative_fibonacci(n, limit=2**63 - 1):
         cumulative_fib_sequence.append(cumulative_sum)
     return cumulative_fib_sequence
 
+<<<<<<< HEAD
+=======
+# Example usage
+if __name__ == "__main__":
+    # Set parameters
+    n = 10  # Number of Fibonacci numbers to generate
+    limit = 100  # Optional cumulative sum limit (default is very large)
+    
+    # Generate Fibonacci sequence
+    fib_sequence = fibonacci(n)
+    print(f"The first {n} Fibonacci numbers:")
+    print(fib_sequence)
+    
+    # Generate cumulative Fibonacci sequence
+    cumulative_fib_sequence = cumulative_fibonacci(n, limit)
+    print(f"\nCumulative Fibonacci sequence for n={n} with limit={limit}:")
+    print(cumulative_fib_sequence)
+
+
+>>>>>>> elt_source/spike/heroku_dag_refactoring
 
 # def fibonacci(n):
 #     """
