@@ -55,6 +55,8 @@ dag = DAG(
 fetch_yfinance_data = BashOperator(
     task_id='fetch_yfinance_data',
     bash_command=(
+        'set -x && '
+        'export PYTHONPATH=$PYTHONPATH:/app/python/src && '
         'export ENV=postgresql+psycopg2://postgres:9356@localhost:5433/dev && '
         'echo "Airflow ENV: $ENV" && '
         '/app/.heroku/python/bin/python3 /app/python/src/dev/raw/yfinance_to_raw_etl.py '
@@ -65,8 +67,6 @@ fetch_yfinance_data = BashOperator(
     },
     dag=dag,
 )
-
-
 
 # Task to trigger the next DAG for creating the cdm.fibonacci_transform_dates table
 trigger_api_cdm_data_ingestion = TriggerDagRunOperator(
