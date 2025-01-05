@@ -31,23 +31,37 @@ dag = DAG(
     catchup=False,  # Ensures it does not backfill from start_date to now
 )
 
-# Task to run the yfinance_to_raw_etl.py Python script, passing environment-specific DB connection
+# # Task to run the yfinance_to_raw_etl.py Python script, passing environment-specific DB connection
+# fetch_yfinance_data = BashOperator(
+#     task_id='fetch_yfinance_data',
+#     bash_command=(
+#         'if [ -x /app/.heroku/python/bin/python3 ]; then '
+#         'PYTHON_EXEC=/app/.heroku/python/bin/python3; '
+#         'else '
+#         'PYTHON_EXEC=python3; '
+#         'fi && '
+#         'export ENV={{ var.value.ENV }} && '
+#         'echo "Airflow ENV: $ENV" && '
+#         '$PYTHON_EXEC /app/python/src/dev/raw/yfinance_to_raw_etl.py '
+#         '--start_date "1950-01-01" --end_date "{{ macros.ds_add(ds, 0) }}"'
+#     ),
+#     env={
+#         'DB_CONNECTION_STRING': db_connection_string,
+#         'ENV': env,
+#     },
+#     dag=dag,
+# )
+
 fetch_yfinance_data = BashOperator(
     task_id='fetch_yfinance_data',
     bash_command=(
-        'if [ -x /app/.heroku/python/bin/python3 ]; then '
-        'PYTHON_EXEC=/app/.heroku/python/bin/python3; '
-        'else '
-        'PYTHON_EXEC=python3; '
-        'fi && '
-        'export ENV={{ var.value.ENV }} && '
+        'export ENV=postgresql+psycopg2://postgres:9356@localhost:5433/dev && '
         'echo "Airflow ENV: $ENV" && '
-        '$PYTHON_EXEC /app/python/src/dev/raw/yfinance_to_raw_etl.py '
-        '--start_date "1950-01-01" --end_date "{{ macros.ds_add(ds, 0) }}"'
+        '/app/.heroku/python/bin/python3 /app/python/src/dev/raw/yfinance_to_raw_etl.py '
+        '--start_date "1950-01-01" --end_date "2025-01-05"'
     ),
     env={
         'DB_CONNECTION_STRING': db_connection_string,
-        'ENV': env,
     },
     dag=dag,
 )
