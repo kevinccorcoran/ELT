@@ -67,6 +67,7 @@ fetch_yfinance_data = BashOperator(
 )
 
 
+
 # Task to trigger the next DAG for creating the cdm.fibonacci_transform_dates table
 trigger_api_cdm_data_ingestion = TriggerDagRunOperator(
     task_id='trigger_dag_for_cdm_api_cdm_data_ingestion_table',
