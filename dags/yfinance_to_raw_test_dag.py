@@ -57,7 +57,7 @@ fetch_yfinance_data = BashOperator(
     bash_command=(
         'set -x && '
         'export PYTHONPATH=$PYTHONPATH:/app/python/src && '
-        'export ENV=postgresql+psycopg2://postgres:9356@localhost:5433/dev && '
+        'export ENV=postgresql+psycopg2://postgres:XXXX@localhost:XXXX/dev && '
         'echo "Airflow ENV: $ENV" && '
         '/app/.heroku/python/bin/python3 /app/python/src/dev/raw/yfinance_to_raw_etl.py '
         '--start_date "1950-01-01" --end_date "2025-01-05"'
