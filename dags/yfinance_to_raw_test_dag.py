@@ -64,7 +64,7 @@ fetch_yfinance_data = BashOperator(
     ),
     env={
         #'DB_CONNECTION_STRING': db_connection_string,
-        'DATABASE_URL': 'postgres://u5ebch7evgijht:p5c3ac22b2534440026249e7b596efe5a90ce1cc7f7959d66f0c4f48fb2d6ad0a@c5hilnj7pn10vb.cluster-czrs8kj4isg7.us-east-1.rds.amazonaws.com:5432/ddml2p1ekjl2fs',
+        'DB_CONNECTION_STRING': 'postgres://u5ebch7evgijht:p5c3ac22b2534440026249e7b596efe5a90ce1cc7f7959d66f0c4f48fb2d6ad0a@c5hilnj7pn10vb.cluster-czrs8kj4isg7.us-east-1.rds.amazonaws.com:5432/ddml2p1ekjl2fs',
     },
     dag=dag,
 )
