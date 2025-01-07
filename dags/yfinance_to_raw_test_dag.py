@@ -4,12 +4,16 @@ from airflow.operators.bash import BashOperator
 from airflow.operators.trigger_dagrun import TriggerDagRunOperator
 import os
 
-# Retrieve environment-specific variables from environment variables
+# Retrieve environment-specific variables
 env = os.getenv("ENV", "staging")  # Default to staging
-db_connection_string = os.getenv("DB_CONNECTION_STRING", "")
+database_url = os.getenv("DATABASE_URL", "")
 
-if not db_connection_string:
-    raise ValueError("DB_CONNECTION_STRING is not set in the environment")
+if not database_url:
+    raise ValueError("DATABASE_URL is not set in the Heroku config vars or environment")
+
+# Optional: Check if DATABASE_URL requires modification for SQLAlchemy
+if database_url.startswith("postgres://"):
+    database_url = database_url.replace("postgres://", "postgresql+psycopg2://", 1)
 
 # Define the default arguments for the DAG
 default_args = {
@@ -31,40 +35,19 @@ dag = DAG(
     catchup=False,  # Ensures it does not backfill from start_date to now
 )
 
-# # Task to run the yfinance_to_raw_etl.py Python script, passing environment-specific DB connection
-# fetch_yfinance_data = BashOperator(
-#     task_id='fetch_yfinance_data',
-#     bash_command=(
-#         'if [ -x /app/.heroku/python/bin/python3 ]; then '
-#         'PYTHON_EXEC=/app/.heroku/python/bin/python3; '
-#         'else '
-#         'PYTHON_EXEC=python3; '
-#         'fi && '
-#         'export ENV={{ var.value.ENV }} && '
-#         'echo "Airflow ENV: $ENV" && '
-#         '$PYTHON_EXEC /app/python/src/dev/raw/yfinance_to_raw_etl.py '
-#         '--start_date "1950-01-01" --end_date "{{ macros.ds_add(ds, 0) }}"'
-#     ),
-#     env={
-#         'DB_CONNECTION_STRING': db_connection_string,
-#         'ENV': env,
-#     },
-#     dag=dag,
-# )
-
+# Task to run the yfinance_to_raw_etl.py Python script
 fetch_yfinance_data = BashOperator(
     task_id='fetch_yfinance_data',
     bash_command=(
         'set -x && '
         'export PYTHONPATH=$PYTHONPATH:/app/python/src && '
-        'export ENV=postgresql+psycopg2://postgres:XXXX@localhost:XXXX/dev && '
-        'echo "Airflow ENV: $ENV" && '
+        'echo "Using database URL: $DB_CONNECTION_STRING" && '
         '/app/.heroku/python/bin/python3 /app/python/src/dev/raw/yfinance_to_raw_etl.py '
-        '--start_date "1950-01-01" --end_date "2025-01-05"'
+        '--start_date "1950-01-01" --end_date "{{ ds }}"'
     ),
     env={
-        #'DB_CONNECTION_STRING': db_connection_string,
-        'DB_CONNECTION_STRING': 'postgres://u5ebch7evgijht:p5c3ac22b2534440026249e7b596efe5a90ce1cc7f7959d66f0c4f48fb2d6ad0a@c5hilnj7pn10vb.cluster-czrs8kj4isg7.us-east-1.rds.amazonaws.com:5432/ddml2p1ekjl2fs',
+        'DB_CONNECTION_STRING': database_url,
+        'ENV': env,
     },
     dag=dag,
 )
