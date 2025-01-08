@@ -2,7 +2,7 @@
 # ELT
 =======
 ## Overview
-This project establishes an Extract, Load, and Transform (ELT) data pipeline with Apache Airflow and dbt (Data Build Tool). The pipeline orchestrates workflows to calculate metrics, such as the Compound Annual Growth Rate (CAGR) for companies, while maintaining a clear separation between public code, sensitive configurations, and proprietary intellectual property within the metrics tables.
+This project establishes an Extract, Load, and Transform (ELT) data pipeline with Apache Airflow and dbt (Data Build Tool). The pipeline orchestrates workflows to calculate metrics, such as the Compound Annual Growth Rate (CAGR) for companies, while maintaining a clear separation between public code, sensitive configurations, and proprietary intellectual property within the metrics tables. 
 
 <img width="1221" alt="image" src="https://github.com/user-attachments/assets/e19bc0ab-c8e9-4d53-9092-26bf746a78ff">
 
