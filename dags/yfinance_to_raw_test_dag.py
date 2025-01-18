@@ -12,7 +12,7 @@ if env == "dev":
     db_connection_string = Variable.get("DEV_DB_CONNECTION_STRING")
 elif env == "staging":
     db_connection_string = Variable.get("STAGING_DB_CONNECTION_STRING")
-elif env in {"heroku_dev", "heroku_staging"}:
+elif env in {"heroku_dev"}:
     db_connection_string = Variable.get("DATABASE_URL")
 else:
     raise ValueError("Invalid environment specified")
@@ -27,7 +27,7 @@ default_args = {
     'start_date': datetime(2023, 1, 1),
     'email_on_failure': False,
     'email_on_retry': False,
-    'retries': 0,
+    'retries': 1,
     'retry_delay': timedelta(minutes=5),
 }
 
@@ -40,18 +40,33 @@ dag = DAG(
     catchup=False,
 )
 
-# Task to run the yfinance_to_raw_etl.py Python script
-bash_command = (
+# Bash command for Heroku environment
+heroku_bash_command = (
     f'export PYTHONPATH=$PYTHONPATH:/app/python/src && '
     f'/app/.heroku/python/bin/python3 /app/python/src/dev/raw/yfinance_to_raw_etl.py '
     f'--start_date "1950-01-01" --end_date "{{{{ ds }}}}"'
 )
 
+# Bash command for other environments
+default_bash_command = (
+    'export ENV={{ var.value.ENV }} && '
+    'echo "Airflow ENV: $ENV" && '
+    '/Users/kevin/.pyenv/shims/python3 /Users/kevin/Dropbox/applications/ELT/python/src/dev/raw/yfinance_to_raw_etl.py '
+    '--start_date "1950-01-01" --end_date "{{ macros.ds_add(ds, 0) }}"'
+)
+
+# Dynamically assign the appropriate bash command
+if db_connection_string == Variable.get("DATABASE_URL"):
+    bash_command = heroku_bash_command
+else:
+    bash_command = default_bash_command
+
+# Task to run the yfinance_to_raw_etl.py Python script
 fetch_yfinance_data = BashOperator(
     task_id='fetch_yfinance_data',
     bash_command=bash_command,
     env={
-        'DATABASE_URL': db_connection_string,
+        'DB_CONNECTION_STRING': db_connection_string,
         'ENV': env,
     },
     dag=dag,
@@ -66,6 +81,76 @@ trigger_api_cdm_data_ingestion = TriggerDagRunOperator(
 
 # Set task dependencies
 fetch_yfinance_data >> trigger_api_cdm_data_ingestion
+
+
+# import os
+# from datetime import datetime, timedelta
+# from airflow import DAG
+# from airflow.models import Variable
+# from airflow.operators.bash import BashOperator
+# from airflow.operators.trigger_dagrun import TriggerDagRunOperator
+
+# # Retrieve environment-specific variables
+# env = Variable.get("ENV", default_var="staging")
+
+# if env == "dev":
+#     db_connection_string = Variable.get("DEV_DB_CONNECTION_STRING")
+# elif env == "staging":
+#     db_connection_string = Variable.get("STAGING_DB_CONNECTION_STRING")
+# elif env in {"heroku_dev"}:
+#     db_connection_string = Variable.get("DATABASE_URL")
+# else:
+#     raise ValueError("Invalid environment specified")
+
+# # Ensure DATABASE_URL is set
+# assert db_connection_string, f"DATABASE_URL or {env}_DB_CONNECTION_STRING is not set in Airflow Variables."
+
+# # Define the default arguments for the DAG
+# default_args = {
+#     'owner': 'airflow',
+#     'depends_on_past': False,
+#     'start_date': datetime(2023, 1, 1),
+#     'email_on_failure': False,
+#     'email_on_retry': False,
+#     'retries': 0,
+#     'retry_delay': timedelta(minutes=5),
+# }
+
+# # Define the DAG
+# dag = DAG(
+#     dag_id="yfinance_to_raw_test_dag",
+#     default_args=default_args,
+#     description="DAG to run a Python script that updates raw.",
+#     schedule_interval=None,
+#     catchup=False,
+# )
+
+# # Task to run the yfinance_to_raw_etl.py Python script
+# bash_command = (
+#     f'export PYTHONPATH=$PYTHONPATH:/app/python/src && '
+#     f'/app/.heroku/python/bin/python3 /app/python/src/dev/raw/yfinance_to_raw_etl.py '
+#     f'--start_date "1950-01-01" --end_date "{{{{ ds }}}}"'
+# )
+
+# fetch_yfinance_data = BashOperator(
+#     task_id='fetch_yfinance_data',
+#     bash_command=bash_command,
+#     env={
+#         'DATABASE_URL': db_connection_string,
+#         'ENV': env,
+#     },
+#     dag=dag,
+# )
+
+# # Task to trigger the next DAG
+# trigger_api_cdm_data_ingestion = TriggerDagRunOperator(
+#     task_id='trigger_dag_for_cdm_api_cdm_data_ingestion_table',
+#     trigger_dag_id="raw_to_api_cdm_data_ingestion_dag",
+#     dag=dag,
+# )
+
+# # Set task dependencies
+# fetch_yfinance_data >> trigger_api_cdm_data_ingestion
 
 # simplied dotenv and postgres WORKS
 # import os
