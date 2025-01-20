@@ -1,8 +1,5 @@
-TICKERS = ['AAPL','MSFT','NET']
-
-
-# # Full list 
-# TICKERS = ['A', 'AA', 'AACT', 'AACT.U', 'AACT.WS', 'AAM', 'AAM.U', 'AAM.WS', 'AAP', 'AAT', 
+# NYSE = [
+# 'A', 'AA', 'AACT', 'AACT.U', 'AACT.WS', 'AAM', 'AAM.U', 'AAM.WS', 'AAP', 'AAT', 
 # 'AB', 'ABBV', 'ABC', 'ABCB', 'ABEV', 'ABG', 'ABM', 'ABR', 'ABRpD', 'ABRpE', 
 # 'ABRpF', 'ABT', 'ABX', 'AC', 'ACA', 'ACCO', 'ACEL', 'ACHR', 'ACHR.WS', 'ACI', 
 # 'ACM', 'ACN', 'ACP', 'ACPpA', 'ACR', 'ACRE', 'ACRpC', 'ACRpD', 'ACV', 'ADC', 
@@ -104,7 +101,7 @@ TICKERS = ['AAPL','MSFT','NET']
 # 'ETWO.WS', 'ETX', 'ETY', 'ETpI', 'EVC', 'EVEX', 'EVEX.WS', 'EVF', 'EVG', 'EVH', 
 # 'EVN', 'EVR', 'EVRI', 'EVT', 'EVTC', 'EVTL', 'EVTL.WS', 'EVTR', 'EW', 'EXG', 
 # 'EXK', 'EXP', 'EXPD', 'EXR', 'EXTO', 'F', 'FAF', 'FBHS', 'FBIN', 'FBK', 
-# 'FBP', 'FBRT', 'FBRTpE', 'FC', 'FCF', 'FCN', 'FCPT', 'FCRX', 'FCT', 
+# 'FBMS', 'FBP', 'FBRT', 'FBRTpE', 'FC', 'FCF', 'FCN', 'FCPT', 'FCRX', 'FCT', 
 # 'FCX', 'FDP', 'FDS', 'FDX', 'FE', 'FEDU', 'FENG', 'FERG', 'FET', 'FF', 
 # 'FFA', 'FFC', 'FFWM', 'FG', 'FGB', 'FGN', 'FHI', 'FHN', 'FHNpB', 'FHNpC', 
 # 'FHNpE', 'FHNpF', 'FI', 'FICO', 'FIGS', 'FIHL', 'FINS', 'FINV', 'FIS', 'FIX', 
@@ -297,9 +294,12 @@ TICKERS = ['AAPL','MSFT','NET']
 # 'XHR', 'XIN', 'XOM', 'XPER', 'XPEV', 'XPO', 'XPOF', 'XPRO', 'XYF', 'XYL', 
 # 'YALA', 'YELP', 'YETI', 'YEXT', 'YMM', 'YOU', 'YPF', 'YPF', 'YRD', 'YSG', 
 # 'YUM', 'YUMC', 'ZBH', 'ZEPP', 'ZETA', 'ZGN', 'ZH', 'ZIM', 'ZIP', 'ZK', 
-# 'ZKH', 'ZTO', 'ZTR', 'ZTS', 'ZUO', 'ZVIA', 'ZWS','AACG', 'AADI', 'AADR', 'AAL', 
-# 'AAME', 'AAOI', 'AAON', 'AAPB', 'AAPD', 'AAPL', 'AAPU', 'AAXJ', 'AAXN', 'ABAT', 
-# 'ABCL', 'ABCS', 'ABEO', 'ABL', 'ABLLL', 'ABLLW', 
+# 'ZKH', 'ZTO', 'ZTR', 'ZTS', 'ZUO', 'ZVIA', 'ZWS', 
+# ]
+
+# NASDAQ = [
+# 'AACG', 'AADI', 'AADR', 'AAL', 'AAME', 'AAOI', 'AAON', 'AAPB', 'AAPD', 'AAPL', 
+# 'AAPU', 'AAXJ', 'AAXN', 'ABAT', 'ABCL', 'ABCS', 'ABEO', 'ABL', 'ABLLL', 'ABLLW', 
 # 'ABLV', 'ABLVW', 'ABNB', 'ABOS', 'ABSI', 'ABTS', 'ABUS', 'ABVC', 'ABVE', 'ABVEW', 
 # 'ABVX', 'ACAB', 'ACABU', 'ACABW', 'ACAD', 'ACB', 'ACCD', 'ACDC', 'ACET', 'ACGL', 
 # 'ACGLN', 'ACGLO', 'ACHC', 'ACHL', 'ACHV', 'ACIC', 'ACIU', 'ACIW', 'ACLS', 'ACLX', 
@@ -791,4 +791,5 @@ TICKERS = ['AAPL','MSFT','NET']
 # 'ZENA', 'ZENV', 'ZEO', 'ZEOWW', 'ZEUS', 'ZG', 'ZI', 'ZIMV', 'ZION', 'ZIONL', 
 # 'ZIONO', 'ZIONP', 'ZJK', 'ZJYL', 'ZKIN', 'ZLAB', 'ZM', 'ZNTL', 'ZOOZ', 'ZOOZW', 
 # 'ZPTA', 'ZPTAW', 'ZS', 'ZTEK', 'ZUMZ', 'ZURA', 'ZVRA', 'ZVSA', 'ZYME', 'ZYXI', 
-# 'ZZZ']
+# 'ZZZ', 
+# ]

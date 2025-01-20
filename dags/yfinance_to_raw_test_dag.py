@@ -6,7 +6,7 @@ from airflow.operators.bash import BashOperator
 from airflow.operators.trigger_dagrun import TriggerDagRunOperator
 
 # Retrieve environment-specific variables
-env = Variable.get("ENV", default_var="staging")
+env = Variable.get("ENV", default_var="dev")
 db_connection_string = None
 
 if env == "dev":
@@ -56,11 +56,11 @@ else:
     bash_command = (
         'export ENV={{ var.value.ENV }} && '
         'echo "Airflow ENV: $ENV" && '
-        '/Users/kevin/.pyenv/shims/python3 /Users/kevin/Dropbox/applications/ELT/python/src/dev/raw/yfinance_to_raw_etl.py '
+        '/Users/kevin/.pyenv/shims/python3 /Users/kevin/repos/ELT_private/python/src/dev/raw/yfinance_to_raw_etl.py '
         '--start_date "1950-01-01" --end_date "{{ macros.ds_add(ds, 0) }}"'
     )
     env_vars = {
-        'DB_CONNECTION_STRING': db_connection_string,
+        'DATABASE_URL': db_connection_string,
         'ENV': env,
     }
 

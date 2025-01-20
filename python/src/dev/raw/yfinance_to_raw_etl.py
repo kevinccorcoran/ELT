@@ -13,7 +13,7 @@ import adbc_driver_postgresql.dbapi as pg_dbapi
 warnings.filterwarnings("ignore", category=FutureWarning)
 
 # Add application directory to system path for module access
-sys.path.append('/Users/kevin/Dropbox/applications/ELT/python/src/')
+sys.path.append('/Users/kevin/repos/ELT_private/python/src/')
 
 # Import configurations and helper functions
 from dev.config.config import TICKERS
