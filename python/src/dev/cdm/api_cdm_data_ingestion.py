@@ -1,18 +1,61 @@
-import sys
 import os
-import polars as pl
 import psycopg2
+import logging
+import polars as pl
 from decimal import Decimal
-import io
 from datetime import datetime, timedelta
+import io
+import sys
 
-# Ensure the connection string is set
-connection_string = os.getenv('DB_CONNECTION_STRING')
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+# Retrieve the database connection string from environment variables
+connection_string = os.getenv('DATABASE_URL')
 if not connection_string:
-    print("DB_CONNECTION_STRING environment variable not set")
+    logging.error("DATABASE_URL environment variable not set.")
     sys.exit(1)
 
+# Adjust the connection string for psycopg2 compatibility
+if connection_string.startswith("postgresql+psycopg2://"):
+    connection_string = connection_string.replace("postgresql+psycopg2://", "postgresql://", 1)
+
+# Function to clean a row and convert values
+def clean_row(row, colnames):
+    return {
+        col: (
+            float(val) if isinstance(val, Decimal) else
+            None if val is None else
+            val
+        )
+        for col, val in zip(colnames, row)
+    }
+
+# Function to generate a full date range and forward-fill missing values
+def generate_full_date_range(df):
+    unique_tickers = df.select(pl.col("ticker")).unique().to_series().to_list()
+    full_data = []
+    for ticker in unique_tickers:
+        ticker_data = df.filter(pl.col("ticker") == ticker)
+        min_date = ticker_data.select(pl.col("date").min())[0, 0]
+        max_date = ticker_data.select(pl.col("date").max())[0, 0]
+        date_range = [min_date + timedelta(days=i) for i in range((max_date - min_date).days + 1)]
+        full_dates = pl.DataFrame({
+            "date": date_range,
+            "ticker": [ticker] * len(date_range),
+        })
+        joined_data = full_dates.join(ticker_data, on=["date", "ticker"], how="left")
+        joined_data = joined_data.with_columns(
+            pl.when(pl.col("open").is_null())
+            .then(pl.lit("synthetic"))
+            .otherwise(pl.lit("natural"))
+            .alias("date_type")
+        )
+        full_data.append(joined_data)
+    return pl.concat(full_data)
+
 try:
+    # Connect to the database
     with psycopg2.connect(connection_string) as conn:
         schema_name = 'raw'
         table_name = 'api_raw_data_ingestion'
@@ -25,7 +68,7 @@ try:
             data = cursor.fetchall()
             colnames = [desc[0] for desc in cursor.description]
 
-        # Define schema for Polars DataFrame explicitly
+        # Define schema for Polars DataFrame
         schema = {
             "date": pl.Date,
             "open": pl.Float64,
@@ -42,53 +85,17 @@ try:
             "ticker_date_id": pl.Utf8,
         }
 
-        # Convert Decimal to float and prepare data as list of dicts
-        def clean_row(row):
-            return {
-                col: (
-                    float(val) if isinstance(val, Decimal) else
-                    None if val is None else
-                    val
-                )
-                for col, val in zip(colnames, row)
-            }
-
-        cleaned_data = [clean_row(row) for row in data]
-
-        # Create Polars DataFrame with explicit schema
+        # Clean data and create Polars DataFrame
+        cleaned_data = [clean_row(row, colnames) for row in data]
         pl_df = pl.DataFrame(cleaned_data, schema=schema)
 
-        # Debug: Log initial data
-        print("Sample cleaned data:", cleaned_data[:5])
-        print("Column names:", colnames)
-        print("Initial DataFrame Schema:", pl_df.schema)
+        # Debug logs
+        logging.info("Sample cleaned data: %s", cleaned_data[:5])
+        logging.info("Column names: %s", colnames)
+        logging.info("Initial DataFrame Schema: %s", pl_df.schema)
 
-        # Add missing synthetic rows and forward-fill data
-        def generate_full_date_range(df):
-            unique_tickers = df.select(pl.col("ticker")).unique().to_series().to_list()
-            full_data = []
-            for ticker in unique_tickers:
-                ticker_data = df.filter(pl.col("ticker") == ticker)
-                min_date = ticker_data.select(pl.col("date").min())[0, 0]
-                max_date = ticker_data.select(pl.col("date").max())[0, 0]
-                date_range = [min_date + timedelta(days=i) for i in range((max_date - min_date).days + 1)]
-                full_dates = pl.DataFrame({
-                    "date": date_range,
-                    "ticker": [ticker] * len(date_range),
-                })
-                joined_data = full_dates.join(ticker_data, on=["date", "ticker"], how="left")
-                joined_data = joined_data.with_columns(
-                    pl.when(pl.col("open").is_null())
-                    .then(pl.lit("synthetic"))
-                    .otherwise(pl.lit("natural"))
-                    .alias("date_type")
-                )
-                full_data.append(joined_data)
-            return pl.concat(full_data)
-
+        # Generate full date range and forward-fill missing values
         full_pl_df = generate_full_date_range(pl_df)
-
-        # Forward-fill missing values
         full_pl_df = full_pl_df.sort(["ticker", "date"]).with_columns(
             [
                 pl.col("open").forward_fill().alias("open"),
@@ -100,27 +107,24 @@ try:
             ]
         )
 
-        # Calculate `ticker_date_id`
+        # Calculate `ticker_date_id` and reorder columns
         full_pl_df = full_pl_df.with_columns(
             (pl.col("ticker") + "_" + pl.col("date").cast(pl.Utf8)).alias("ticker_date_id")
         )
-
-        # Reorder columns for PostgreSQL compatibility
         full_pl_df = full_pl_df.select([
             "date", "ticker", "open", "high", "low", "close", "volume",
             "dividends", "Stock Splits", "processed_at", "adj_close",
             "Capital Gains", "date_type", "ticker_date_id"
         ])
 
-        # **Ensure Distinct Rows**
-        # Keep only distinct rows based on the unique key, here assumed as 'ticker_date_id'.
+        # Ensure distinct rows
         full_pl_df = full_pl_df.unique(subset=["ticker_date_id"])
 
         # Debug transformed DataFrame
-        print("Transformed DataFrame Schema:", full_pl_df.schema)
-        print("Sample Rows After Transformation:", full_pl_df.head())
+        logging.info("Transformed DataFrame Schema: %s", full_pl_df.schema)
+        logging.info("Sample Rows After Transformation: %s", full_pl_df.head())
 
-        # Insert into target PostgreSQL table in batches
+        # Insert into the target PostgreSQL table in batches
         batch_size = 10000
         num_rows = full_pl_df.shape[0]
         for start in range(0, num_rows, batch_size):
@@ -141,9 +145,9 @@ try:
                     csv_buffer
                 )
             conn.commit()
-            print(f"Batch of {len(batch)} rows saved.")
+            logging.info("Batch of %d rows saved.", len(batch))
 
 except psycopg2.Error as db_err:
-    print(f"Database error: {db_err}")
+    logging.error("Database error: %s", db_err)
 except Exception as e:
-    print(f"Unexpected error: {e}")
+    logging.error("Unexpected error: %s", e)
