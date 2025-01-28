@@ -62,7 +62,7 @@ def get_bash_command(env: str, db_connection_string: str) -> Tuple[str, Dict[str
 
 
 # Retrieve environment-specific variables
-env = Variable.get("ENV")  # Default to "dev" if ENV is not set
+env = Variable.get("ENV", default_var="dev")  # Default to "dev" if ENV is not set
 db_connection_string = get_db_connection_string(env)
 
 # Define the default arguments for the DAG
