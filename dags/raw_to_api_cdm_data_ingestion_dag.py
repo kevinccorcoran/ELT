@@ -1,13 +1,13 @@
 # Standard library imports
 from datetime import datetime, timedelta
-
+# test
 # Airflow-specific imports
 from airflow import DAG
 from airflow.models import Variable
 from airflow.operators.bash import BashOperator
 from airflow.operators.trigger_dagrun import TriggerDagRunOperator
 
-# Import Tuple and Dict for Python typing
+# Import Tuple and Dict for Python <3.9 compatibility
 from typing import Tuple, Dict
 
 # Configure logging
@@ -42,14 +42,14 @@ def get_bash_command(env: str, db_connection_string: str) -> Tuple[str, Dict[str
     if env == "heroku_postgres":
         bash_command = (
             f'export PYTHONPATH=$PYTHONPATH:/app/python/src && '
-            f'/app/.heroku/python/bin/python3 /app/python/src/dev/raw/yfinance_to_raw_etl.py '
+            f'/app/.heroku/python/bin/python3 /app/python/src/dev/cdm/api_cdm_data_ingestion.py '
             f'--start_date "1950-01-01" --end_date "{{{{ ds }}}}"'
         )
     else:
         bash_command = (
             'export ENV={{ var.value.ENV }} && '
             'echo "Airflow ENV: $ENV" && '
-            '/Users/kevin/.pyenv/shims/python3 /Users/kevin/repos/ELT_private/python/src/dev/raw/yfinance_to_raw_etl.py '
+            '/Users/kevin/.pyenv/shims/python3 /Users/kevin/repos/ELT_private/python/src/dev/cdm/api_cdm_data_ingestion.py '
             '--start_date "1950-01-01" --end_date "{{ macros.ds_add(ds, 0) }}"'
         )
     
@@ -62,7 +62,7 @@ def get_bash_command(env: str, db_connection_string: str) -> Tuple[str, Dict[str
 
 
 # Retrieve environment-specific variables
-env = Variable.get("ENV", default_var="dev").strip()
+env = Variable.get("ENV", default_var="dev")  # Default to "dev" if ENV is not set
 db_connection_string = get_db_connection_string(env)
 
 # Define the default arguments for the DAG
@@ -72,15 +72,24 @@ default_args = {
     'start_date': datetime(2023, 1, 1),
     'email_on_failure': False,
     'email_on_retry': False,
-    'retries': 1,
+    'retries': 0,
     'retry_delay': timedelta(minutes=5),
 }
 
+# # Define the DAG
+# dag = DAG(
+#     dag_id="yfinance_to_raw_bulk_dag",
+#     default_args=default_args,
+#     description="Bulk updates raw data",
+#     schedule_interval=None,
+#     catchup=False,
+# )
+
 # Define the DAG
 dag = DAG(
-    dag_id="yfinance_to_raw_bulk_dag",
+    dag_id="raw_to_api_cdm_data_ingestion_dag",
     default_args=default_args,
-    description="Bulk updates raw data from yfinance to PostgreSQL.",
+    description="DAG to run a Python script that updates cdm.raw_to_api_cdm_data_ingestion",
     schedule_interval=None,  # Manual trigger only
     catchup=False,
 )
@@ -88,20 +97,20 @@ dag = DAG(
 # Get the Bash command and environment variables
 bash_command, env_vars = get_bash_command(env, db_connection_string)
 
-# Task to run the yfinance_to_raw_etl.py Python script
-fetch_yfinance_data = BashOperator(
-    task_id='fetch_yfinance_data',
+# Task to run the Python script
+insert_api_cdm_data_ingestion = BashOperator(
+    task_id='insert_api_cdm_data_ingestion',
     bash_command=bash_command,
-    env=env_vars,
+    env=env_vars,  # Pass the environment variables to the task
     dag=dag,
 )
 
-# Task to trigger the next DAG
-trigger_api_cdm_data_ingestion = TriggerDagRunOperator(
-    task_id='trigger_dag_for_cdm_api_cdm_data_ingestion_table',
-    trigger_dag_id="raw_to_api_cdm_data_ingestion_dag",
+# Task to trigger the next DAG for creating the lookup table
+trigger_raw_to_lookup_dag = TriggerDagRunOperator(
+    task_id='trigger_dag_for_cdm_fibonacci_transform_dates_lookup_table',
+    trigger_dag_id="raw_to_lookup_dag",  # ID of the DAG to trigger
     dag=dag,
 )
 
 # Set task dependencies
-fetch_yfinance_data >> trigger_api_cdm_data_ingestion 
+insert_api_cdm_data_ingestion >> trigger_raw_to_lookup_dag
