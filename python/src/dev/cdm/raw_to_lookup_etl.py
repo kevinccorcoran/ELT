@@ -1,215 +1,186 @@
-<<<<<<< HEAD
 import os
 import sys
-from pyspark.sql import SparkSession
-from pyspark.sql.functions import min as spark_min, col, row_number, expr, explode, broadcast
-from pyspark.sql.window import Window
-from dev.config.fibonacci import cumulative_fibonacci
-from dev.config.helpers import save_to_database
-from airflow.models import Variable
-
-# Set environment and database connection paths
-os.environ["JAVA_HOME"] = "/Library/Java/JavaVirtualMachines/jdk1.8.0_202.jdk/Contents/Home"
-sys.path.append('/Users/kevin/Dropbox/applications/ELT/python/src')
-
-# Retrieve environment-specific JDBC connection string
-env = Variable.get("ENV", default_var="staging")
-if env == "DEV":
-    db_connection_string = Variable.get("JDBC_DEV_DB_CONNECTION_STRING")
-elif env == "staging":
-    db_connection_string = Variable.get("JDBC_STAGING_DB_CONNECTION_STRING")
-else:
-    raise ValueError("Invalid environment specified")
-
-# Database credentials
-db_user = Variable.get("DB_USER")
-db_password = Variable.get("DB_PASSWORD")
-postgres_jar_path = "/Users/kevin/Dropbox/applications/ELT/jars/postgresql-42.7.4.jar"
-
-# Initialize Spark session
-spark = SparkSession.builder \
-    .appName("StockDataProcessing") \
-    .config("spark.jars", postgres_jar_path) \
-    .config("spark.driver.memory", "8g") \
-    .config("spark.executor.memory", "8g") \
-    .config("spark.sql.shuffle.partitions", "200") \
-    .getOrCreate()
-
-try:
-    # Load data from PostgreSQL
-    df = spark.read \
-        .format("jdbc") \
-        .option("url", db_connection_string) \
-        .option("dbtable", "raw.api_raw_data_ingestion") \
-        .option("user", db_user) \
-        .option("password", db_password) \
-        .option("driver", "org.postgresql.Driver") \
-        .load()
-
-    # Load existing records to avoid duplicates
-    existing_df = spark.read \
-        .format("jdbc") \
-        .option("url", db_connection_string) \
-        .option("dbtable", "cdm.date_lookup") \
-        .option("user", db_user) \
-        .option("password", db_password) \
-        .option("driver", "org.postgresql.Driver") \
-        .load() \
-        .select("ticker", "date")
-
-    # Step 1: Get minimum date per ticker
-    min_dates_df = df.groupBy("ticker").agg(spark_min("date").alias("min_date"))
-
-    # Step 2: Create a date sequence from min_date with a range of years
-    years_to_add = 100  # Adjust as needed
-    date_sequences = min_dates_df.withColumn(
-        "date_sequence",
-        expr(f"sequence(min_date, min_date + interval {years_to_add} year, interval 1 year)")
-    )
-
-    # Step 3: Explode date_sequence to create rows for each date
-    date_df = date_sequences.select("ticker", explode("date_sequence").alias("date"))
-
-    # Step 4: Assign row numbers within each ticker group
-    window_spec = Window.partitionBy("ticker").orderBy("date")
-    date_df = date_df.withColumn("row_number", row_number().over(window_spec))
-
-    # Step 5: Generate Fibonacci sequence and filter rows
-    row_count = date_df.count()
-    fib_sequence = cumulative_fibonacci(row_count)
-    fib_df = spark.createDataFrame([(num,) for num in fib_sequence], ["row_number"])
-
-    # Filter date_df to keep only rows with row_number in Fibonacci sequence
-    result_df = date_df.join(fib_df, "row_number", "inner")
-
-    # Step 6: Remove records that already exist in the target table
-    new_records_df = result_df.join(broadcast(existing_df), on=["ticker", "date"], how="left_anti")
-
-    # Step 7: Write new records to PostgreSQL with batch optimization
-    new_records_df.write \
-        .format("jdbc") \
-        .option("url", db_connection_string) \
-        .option("dbtable", "cdm.date_lookup") \
-        .option("user", db_user) \
-        .option("password", db_password) \
-        .option("driver", "org.postgresql.Driver") \
-        .option("numPartitions", "10") \
-        .option("batchsize", "50000") \
-        .mode("append") \
-        .save()
-
-    print("New records successfully saved to the database.")
-
-except Exception as e:
-    print("Unexpected error occurred:", e)
-
-finally:
-    spark.stop()
-=======
-import sys
-import os
+import logging
+import psycopg2
 import pandas as pd
 from pandas.tseries.offsets import DateOffset
 from datetime import datetime
-import adbc_driver_postgresql.dbapi as pg_dbapi
+from decimal import Decimal
+import io
 
-# Add application directory and utils to system path
-sys.path.append('/Users/kevin/Dropbox/applications/ELT/python/src/')
-sys.path.append(os.path.join(os.path.dirname(__file__), '../utils'))
+# ---------------------------------------------------------------------------
+# Configure Logging
+# ---------------------------------------------------------------------------
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-# Import custom modules
-from dev.config.config import TICKERS
-from dev.config.fibonacci import cumulative_fibonacci
-from dev.config.helpers import save_to_database, fetch_data_from_database
+# ---------------------------------------------------------------------------
+# Retrieve DATABASE_URL (or DB_CONNECTION_STRING) from environment variables
+# ---------------------------------------------------------------------------
+connection_string = os.getenv('DATABASE_URL')
+if not connection_string:
+    logging.error("DATABASE_URL environment variable not set.")
+    sys.exit(1)
 
+# Adjust the connection string for psycopg2 compatibility if needed
+if connection_string.startswith("postgresql+psycopg2://"):
+    connection_string = connection_string.replace("postgresql+psycopg2://", "postgresql://", 1)
+
+# ---------------------------------------------------------------------------
+# Utility Functions
+# ---------------------------------------------------------------------------
 def get_next_trading_day(date):
-    """Returns the next available trading day."""
+    """
+    Returns the next available trading day.
+    Uses pandas bdate_range (business day range),
+    which excludes weekends and can be customized for holidays.
+    """
     return pd.bdate_range(date, periods=1)[0].date()
 
 def process_stock_data(df, years_to_add=3):
-    """Processes the stock data to find and extend minimum dates for each ticker."""
-    
-    # Ensure 'date' column is in datetime.date format to prevent merging errors
+    """
+    Processes the stock data to find and extend minimum dates for each ticker.
+    1. Convert 'date' to datetime.date.
+    2. Group by 'ticker' and find the earliest date.
+    3. For each year up to `years_to_add`, shift that earliest date forward
+       and join with the original DataFrame.
+    4. Drop rows with missing data, add a row_number partitioned by ticker.
+    """
     df['date'] = pd.to_datetime(df['date']).dt.date
 
-    # Group by 'ticker' and select the minimum date for each group
+    # Find the earliest date for each ticker
     min_dates = df.groupby('ticker')['date'].min().reset_index()
 
-    # Initialize a list to store all the dataframes
-    all_years_dfs = [min_dates]  # Start with the minimum dates (unshifted)
-
-    # Loop through the range to add multiple years
+    # Collect DataFrames: the original min dates + each subsequent year shift
+    all_years_dfs = [min_dates]
     for year in range(1, years_to_add + 1):
         min_dates_shifted = min_dates.copy()
         min_dates_shifted['date'] = min_dates_shifted['date'] + DateOffset(years=year)
         min_dates_shifted['date'] = min_dates_shifted['date'].apply(get_next_trading_day)
-
-        # Ensure consistent 'date' format before merging
         min_dates_shifted['date'] = pd.to_datetime(min_dates_shifted['date']).dt.date
 
-        # Merge with the original DataFrame to get other columns for the shifted dates
+        # Merge to preserve only columns we need
         shifted_df = pd.merge(min_dates_shifted, df, on=['ticker', 'date'], how='left')[['ticker', 'date']]
         all_years_dfs.append(shifted_df)
 
-    # Concatenate all DataFrames
+    # Concatenate all years and remove missing
     result_df = pd.concat(all_years_dfs, ignore_index=True)
-
-    # Ensure all dates are in datetime.date format
     result_df['date'] = pd.to_datetime(result_df['date']).dt.date
     result_df.dropna(inplace=True)
 
-    # Add a row number partitioned by 'ticker' and ordered by 'date'
-    result_df['row_number'] = result_df.sort_values('date').groupby('ticker').cumcount()
+    # Add row_number for each (ticker) ordered by date
+    result_df['row_number'] = (
+        result_df.sort_values('date')
+                 .groupby('ticker')
+                 .cumcount()
+    )
 
     return result_df
 
-if __name__ == "__main__":
-    schema_name = 'raw'  # Define the schema where the table is located
-    table_name = 'api_raw_data_ingestion'  # Table to fetch data from
-    new_table_name = 'date_lookup'  # Table to save processed data
+def cumulative_fibonacci(n):
+    """
+    Returns a set of Fibonacci numbers cumulatively generated
+    up to the given integer `n`.
+    Example usage: if n=100, return all Fibonacci positions <= 100.
+    """
+    fib_set = set()
+    a, b = 0, 1
+    while a <= n:
+        fib_set.add(a)
+        a, b = b, a + b
+    return fib_set
 
-    # Retrieve connection string from environment variables
-    connection_string = os.getenv('DB_CONNECTION_STRING')
+# ---------------------------------------------------------------------------
+# Main ETL Logic
+# ---------------------------------------------------------------------------
+try:
+    # Connect to PostgreSQL
+    with psycopg2.connect(connection_string) as conn:
+        schema_name = 'raw'
+        table_name = 'api_raw_data_ingestion'
+        target_schema = 'cdm'
+        target_table = 'date_lookup'
 
-    if connection_string is None:
-        print("DB_CONNECTION_STRING environment variable not set")
-    else:
-        try:
-            # Fetch the full dataset
-            df = fetch_data_from_database(schema_name, table_name, connection_string)
+        # -------------------------------------------------------------------
+        # 1) Fetch the full dataset from raw.api_raw_data_ingestion
+        # -------------------------------------------------------------------
+        query = f"SELECT * FROM {schema_name}.{table_name}"
+        logging.info("Fetching data from %s.%s ...", schema_name, table_name)
 
-            if df is not None:
-                # Split the tickers into batches of 100
-                unique_tickers = df['ticker'].unique()
-                ticker_batches = [unique_tickers[i:i + 10] for i in range(0, len(unique_tickers), 10)]
+        with conn.cursor() as cursor:
+            cursor.execute(query)
+            rows = cursor.fetchall()
+            colnames = [desc[0] for desc in cursor.description]
 
-                for batch_num, ticker_batch in enumerate(ticker_batches, start=1):
-                    print(f"Processing batch {batch_num} with {len(ticker_batch)} tickers...")
+        if not rows:
+            logging.warning("No rows returned from the database.")
+            sys.exit(0)
 
-                    # Filter the DataFrame for the current batch of tickers
-                    batch_df = df[df['ticker'].isin(ticker_batch)]
+        # Create a Pandas DataFrame
+        df = pd.DataFrame(rows, columns=colnames)
+        logging.info("Data fetched. Shape of DataFrame: %s", df.shape)
 
-                    # Process the batch data
-                    result_df = process_stock_data(batch_df, years_to_add=100)
+        # -------------------------------------------------------------------
+        # 2) Split the tickers into batches of 10 (or 100, if needed)
+        # -------------------------------------------------------------------
+        unique_tickers = df['ticker'].unique()
+        ticker_batches = [unique_tickers[i:i + 10] for i in range(0, len(unique_tickers), 10)]
+        logging.info("Number of batches: %s", len(ticker_batches))
 
-                    # Generate the cumulative Fibonacci series for filtering
-                    cumulative_fib_sequence = cumulative_fibonacci(len(result_df))
+        # -------------------------------------------------------------------
+        # 3) Process each ticker batch
+        # -------------------------------------------------------------------
+        batch_num = 0
+        for ticker_batch in ticker_batches:
+            batch_num += 1
+            logging.info("Processing batch %d with %d tickers...", batch_num, len(ticker_batch))
+            
+            # Filter the DataFrame for this batch
+            batch_df = df[df['ticker'].isin(ticker_batch)]
+            
+            # Generate the extended date set for each ticker
+            result_df = process_stock_data(batch_df, years_to_add=100)
 
-                    # Filter the result_df to only include rows with 'row_number' in the Fibonacci series
-                    matching_rows = result_df[result_df['row_number'].isin(cumulative_fib_sequence)].copy()
+            # ----------------------------------------------------------------
+            # 4) Fibonacci filtering
+            # ----------------------------------------------------------------
+            fib_sequence = cumulative_fibonacci(result_df['row_number'].max())
+            matching_rows = result_df[result_df['row_number'].isin(fib_sequence)].copy()
 
-                    # Sort the DataFrame by ticker before saving
-                    matching_rows = matching_rows.sort_values(by=['ticker', 'date', 'row_number'], ascending=True)
+            # Sort results
+            matching_rows.sort_values(by=['ticker', 'date', 'row_number'], ascending=True, inplace=True)
 
-                    # Save the filtered and sorted DataFrame for the current batch
-                    save_to_database(matching_rows, new_table_name, connection_string, 'cdm', ['ticker', 'date'])
+            if matching_rows.empty:
+                logging.info("Batch %d has no matching rows after Fibonacci filtering.", batch_num)
+                continue
 
-                    # Optional: Log progress
-                    print(f"Batch {batch_num} saved successfully.")
+            logging.info("Batch %d result shape: %s", batch_num, matching_rows.shape)
 
-                print("All batches processed and saved successfully.")
-            else:
-                print("No data fetched from the database.")
-        except Exception as e:
-            print("Unexpected error occurred:", e)
->>>>>>> elt_source/spike/heroku_dag_refactoring
+            # ----------------------------------------------------------------
+            # 5) Write to the target table using COPY
+            # ----------------------------------------------------------------
+            # We'll just store (ticker, date, row_number) in this example
+            # but you can store more columns if needed.
+            csv_buffer = io.StringIO()
+            matching_rows.to_csv(csv_buffer, index=False, header=True)
+            csv_buffer.seek(0)
+
+            columns_to_copy = ['ticker', 'date', 'row_number']
+            copy_sql = f"""
+                COPY {target_schema}.{target_table} ({', '.join(columns_to_copy)})
+                FROM STDIN WITH (FORMAT CSV, HEADER TRUE)
+            """
+
+            with conn.cursor() as cursor:
+                cursor.copy_expert(copy_sql, csv_buffer)
+            conn.commit()
+
+            logging.info("Batch %d saved successfully.", batch_num)
+
+        logging.info("All batches processed and saved successfully.")
+
+except psycopg2.Error as db_err:
+    logging.error("Database error: %s", db_err)
+    sys.exit(1)
+except Exception as e:
+    logging.error("Unexpected error: %s", e)
+    sys.exit(1)
