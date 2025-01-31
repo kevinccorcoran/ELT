@@ -76,15 +76,6 @@ default_args = {
     'retry_delay': timedelta(minutes=5),
 }
 
-# # Define the DAG
-# dag = DAG(
-#     dag_id="yfinance_to_raw_bulk_dag",
-#     default_args=default_args,
-#     description="Bulk updates raw data",
-#     schedule_interval=None,
-#     catchup=False,
-# )
-
 # Define the DAG
 dag = DAG(
     dag_id="raw_to_api_cdm_data_ingestion_dag",
