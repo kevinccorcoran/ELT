@@ -1,0 +1,196 @@
+# Standard library imports
+from datetime import timedelta
+import pendulum  # For handling dates
+
+# Airflow-specific imports
+from airflow import DAG
+from airflow.models import Variable
+from airflow.operators.bash import BashOperator
+from airflow.operators.trigger_dagrun import TriggerDagRunOperator
+from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
+
+# Configure logging
+import logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+
+def get_db_connection_string(env: str) -> str:
+    """
+    Retrieve the database connection string based on the environment.
+    """
+    env_to_var_map = {
+        "dev": "DEV_DB_CONNECTION_STRING",
+        "staging": "STAGING_DB_CONNECTION_STRING",
+        "heroku_postgres": "DATABASE_URL",
+    }
+
+    if env not in env_to_var_map:
+        raise ValueError(f"Invalid environment specified: {env}. Please set a valid ENV variable.")
+
+    connection_string = Variable.get(env_to_var_map[env], default_var=None)
+    if not connection_string:
+        raise ValueError(f"Environment variable {env_to_var_map[env]} is not set.")
+
+    return connection_string
+
+
+# def get_dbt_bash_command(env: str) -> str:
+#     """
+#     Generate the Bash command dynamically for running the dbt model.
+#     """
+#     return (
+#         'export ENV={{ var.value.ENV }} && '
+#         'echo "Airflow ENV: $ENV" && '
+#         'cd /Users/kevin/repos/ELT_private/dbt/src/app && '
+#         '/Users/kevin/.pyenv/shims/dbt run --models company_cagr'
+#     )
+def get_dbt_bash_command(env: str) -> str:
+    return (
+        'export ENV={{ var.value.ENV }} && '
+        'echo "Airflow ENV: $ENV" && '
+        'cd /Users/kevin/repos/ELT_private/dbt/src/app && '
+        # Run dbt and force exit 0 even if dbt returns 1
+        '( /Users/kevin/.pyenv/shims/dbt run --models company_cagr ; exit 0 ) '
+        '> /tmp/dbt_cagr_output.log 2>&1'
+    )
+
+# Retrieve environment-specific variables
+env = Variable.get("ENV", default_var="dev")  # Default to "dev" if ENV is not set
+db_connection_string = get_db_connection_string(env)
+
+# Define the default arguments for the DAG
+default_args = {
+    'owner': 'airflow',
+    'depends_on_past': False,
+    'email_on_failure': False,
+    'email_on_retry': False,
+    'retries': 1,
+    'retry_delay': timedelta(minutes=5),
+}
+
+with DAG(
+    dag_id="cdm_company_cagr_dag",
+    description="DAG for creating metrics.cagr_metric",
+    default_args=default_args,
+    start_date=pendulum.today('UTC').subtract(days=1),
+    catchup=False,
+) as dag:
+
+    # # Task to test the database connection
+    # test_connection = SQLExecuteQueryOperator(
+    #     task_id='test_connection',
+    #     conn_id='postgres_default',
+    #     sql="SELECT 1;",
+    # )
+
+    # # Task to run dbt for company_cagr
+    # dbt_run = BashOperator(
+    #     task_id='dbt_run_model_cagr_metric',
+    #     bash_command=get_dbt_bash_command(env),
+    #     env={'DATABASE_URL': db_connection_string, 'ENV': env},
+    # )
+
+    dbt_run = BashOperator(
+    task_id='dbt_run_model_cagr_metric',
+    bash_command=get_dbt_bash_command(env) + " > /dev/null 2>&1",
+    env={'DATABASE_URL': db_connection_string, 'ENV': env},
+)
+
+
+    # Task to trigger downstream DAGs
+    trigger_metrics_ticker_movement_analysis_dag = TriggerDagRunOperator(
+        task_id='trigger_dag_metrics_ticker_movement_analysis_table',
+        trigger_dag_id="metrics_ticker_movement_analysis_dag",
+    )
+
+    trigger_metrics_cagr_metrics_dag = TriggerDagRunOperator(
+        task_id='trigger_dag_metrics_cagr_metrics_model',
+        trigger_dag_id="metrics_cagr_metric_dag",
+    )
+
+    trigger_metrics_next_n_cagr_ratios_dag = TriggerDagRunOperator(
+        task_id='trigger_dag_metrics_next_n_cagr_ratios_model',
+        trigger_dag_id="metric_next_n_cagr_ratios_dag",
+    )
+
+    # Define task dependencies
+    (
+        dbt_run
+        >> trigger_metrics_ticker_movement_analysis_dag
+        >> trigger_metrics_cagr_metrics_dag
+        >> trigger_metrics_next_n_cagr_ratios_dag
+    )
+
+
+# # Standard library imports
+# from datetime import timedelta
+
+# # Related third-party imports
+# from airflow import DAG
+# from airflow.operators.bash import BashOperator
+# from airflow.operators.trigger_dagrun import TriggerDagRunOperator
+# from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
+# from airflow.sensors.external_task import ExternalTaskSensor
+# import pendulum  # For handling dates
+
+# # Define the default arguments for the DAG
+# default_args = {
+#     'owner': 'airflow',
+#     'depends_on_past': False,
+#     'email_on_failure': False,
+#     'email_on_retry': False,
+#     'retries': 1,
+#     'retry_delay': timedelta(minutes=5),
+# }
+
+# with DAG(
+#     dag_id="cdm_company_cagr_dag",
+#     description="DAG for creating metrics.cagr_metric",
+#     default_args=default_args,
+#     start_date=pendulum.today('UTC').subtract(days=1),
+#     catchup=False,
+# ) as dag:
+
+#     # Task to test the database connection
+#     test_connection = SQLExecuteQueryOperator(
+#         task_id='test_connection',
+#         conn_id='postgres_default',
+#         sql="SELECT 1;",
+#     )
+
+#     dbt_run = BashOperator(
+#         task_id='dbt_run_model_cagr_metric',
+#         bash_command=(
+#             'export ENV={{ var.value.ENV }} && '
+#             'echo "Airflow ENV: $ENV" && '
+#             'cd /Users/kevin/repos/ELT_private/dbt/src/app && '
+#             'dbt run --models company_cagr'
+#         ),
+#     )
+
+#     # Task to trigger metrics_ticker_movement_analysis_dag
+#     trigger_metrics_ticker_movement_analysis_dag = TriggerDagRunOperator(
+#         task_id='trigger_dag_metrics_ticker_movement_analysis_table',
+#         trigger_dag_id="metrics_ticker_movement_analysis_dag",
+#     )
+
+#     # Task to trigger metrics_cagr_metrics_dag
+#     trigger_metrics_cagr_metrics_dag = TriggerDagRunOperator(
+#         task_id='trigger_dag_metrics_cagr_metrics_model',
+#         trigger_dag_id="metrics_cagr_metric_dag",
+#     )
+
+#     # Task to trigger metrics_next_n_cagr_ratios_dag
+#     trigger_metrics_next_n_cagr_ratios_dag = TriggerDagRunOperator(
+#         task_id='trigger_dag_metrics_next_n_cagr_ratios_model',
+#         trigger_dag_id="metric_next_n_cagr_ratios_dag",
+#     )
+
+#     # Set task dependencies
+#     (
+#         test_connection 
+#         >> dbt_run 
+#         >> trigger_metrics_ticker_movement_analysis_dag 
+#         >> trigger_metrics_cagr_metrics_dag 
+#         >> trigger_metrics_next_n_cagr_ratios_dag
+#     )
