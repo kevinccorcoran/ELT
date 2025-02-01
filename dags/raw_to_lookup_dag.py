@@ -78,7 +78,7 @@ default_args = {
 
 # Define the DAG
 dag = DAG(
-    dag_id="raw_to_lookup_dag",
+    dag_id="raw_to_lookup_dag_test",
     default_args=default_args,
     description="DAG to run a Python script that updates cdm.date_lookup",
     schedule_interval=None,  # Manual trigger only
