@@ -43,7 +43,7 @@ def get_bash_command(env: str, db_connection_string: str) -> Tuple[str, Dict[str
         bash_command = (
             f'export PYTHONPATH=$PYTHONPATH:/app/python/src && '
             f'/app/.heroku/python/bin/python3 /app/python/src/dev/raw/yfinance_to_raw_etl.py '
-            f'--start_date "1950-01-01" --end_date "{{ macros.ds_add(ds, 0) }}"'
+            f'--start_date "1950-01-01" --end_date "{{{{ ds }}}}"'
         )
     else:
         bash_command = (
