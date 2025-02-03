@@ -44,7 +44,6 @@ def get_dbt_bash_command(env: str, db_connection_string: str) -> Tuple[str, Dict
             'echo "Airflow ENV: $ENV" && '
             'cd /Users/kevin/repos/ELT_private/dbt/src/app && '
             '( /Users/kevin/.pyenv/shims/dbt run --models company_cagr ; exit 0 ) '
-            '> /tmp/dbt_cagr_output.log 2>&1'
         )
 
     env_vars = {
@@ -82,7 +81,7 @@ with DAG(
     # Run dbt model
     dbt_run = BashOperator(
         task_id='dbt_run_model_cagr_metric',
-        bash_command=bash_command + " > /dev/null 2>&1",
+        bash_command=bash_command,
         env=env_vars,
     )
 
