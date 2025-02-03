@@ -36,8 +36,8 @@ def get_dbt_bash_command(env: str, db_connection_string: str) -> Tuple[str, Dict
             'echo "Current DB: $DATABASE_URL" && '
             'export PYTHONPATH=$PYTHONPATH:/app/python/src && '
             'cd /app/dbt && '
-            '(dbt run --models company_cagr --debug ; exit 0) '
-            '2>&1 | tee /tmp/dbt_cagr_output.log'
+            'dbt debug && '
+            '(dbt run --models company_cagr --debug ; exit 0) 2>&1 | tee /tmp/dbt_cagr_output.log'
         )
         # bash_command = (
         #     f'echo "Current DB: $DATABASE_URL" && '
