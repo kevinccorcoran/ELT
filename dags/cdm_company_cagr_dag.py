@@ -34,7 +34,7 @@ def get_dbt_bash_command(env: str, db_connection_string: str) -> Tuple[str, Dict
     if env == "heroku_postgres":
         bash_command = (
             f'export PYTHONPATH=$PYTHONPATH:/app/python/src && '
-            f'cd /app/dbt && '  # Adjusted path for Heroku
+            f'cd /app/dbt && '
             f'(dbt run --models company_cagr ; exit 0) '
             f'> /tmp/dbt_cagr_output.log 2>&1'
         )
