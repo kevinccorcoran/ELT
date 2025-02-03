@@ -5,6 +5,10 @@ apache-airflow-providers-http==4.13.3
 apache-airflow-providers-postgres==5.14.0
 apache-airflow-providers-amazon==9.2.0
 
+# dbt
+dbt-core==1.7.4
+dbt-postgres==1.7.4
+
 # Web framework and session management
 Flask>=2.2,<2.3
 flask-session==0.4.0
