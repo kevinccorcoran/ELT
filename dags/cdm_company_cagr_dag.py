@@ -32,13 +32,20 @@ def get_dbt_bash_command(env: str, db_connection_string: str) -> Tuple[str, Dict
     Generate the Bash command and environment variables dynamically for running dbt.
     """
     if env == "heroku_postgres":
+        # bash_command = (
+        #     'echo "Current DB: $DATABASE_URL" && '
+        #     'export PYTHONPATH=$PYTHONPATH:/app/python/src && '
+        #     'cd /app/dbt && '
+        #     '/app/.heroku/python/bin/dbt debug --profiles-dir /app/.dbt && '
+        #     '(/app/.heroku/python/bin/dbt run --models company_cagr --debug --profiles-dir /app/.dbt ; exit 0) 2>&1 | tee /tmp/dbt_cagr_output.log'
+        # )
         bash_command = (
-            'echo "Current DB: $DATABASE_URL" && '
-            'export PYTHONPATH=$PYTHONPATH:/app/python/src && '
-            'cd /app/dbt && '
-            '/app/.heroku/python/bin/dbt debug --profiles-dir /app/.dbt && '
-            '(/app/.heroku/python/bin/dbt run --models company_cagr --debug --profiles-dir /app/.dbt ; exit 0) 2>&1 | tee /tmp/dbt_cagr_output.log'
-        )
+        'echo "Current DB: $DATABASE_URL" && '
+        'export PYTHONPATH=$PYTHONPATH:/app/python/src && '
+        'cd /app/dbt && '
+        '/app/.heroku/python/bin/dbt debug --profiles-dir /app/.dbt && '
+        '(/app/.heroku/python/bin/dbt run --models company_cagr --debug --profiles-dir /app/.dbt || true) 2>&1 | tee /tmp/dbt_cagr_output.log'
+    )
         # bash_command = (
         #     f'echo "Current DB: $DATABASE_URL" && '
         #     f'export PYTHONPATH=$PYTHONPATH:/app/python/src && '
