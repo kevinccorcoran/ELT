@@ -32,31 +32,12 @@ def get_dbt_bash_command(env: str, db_connection_string: str) -> Tuple[str, Dict
     Generate the Bash command and environment variables dynamically for running dbt.
     """
     if env == "heroku_postgres":
-        # bash_command = (
-        #     'echo "Current DB: $DATABASE_URL" && '
-        #     'export PYTHONPATH=$PYTHONPATH:/app/python/src && '
-        #     'cd /app/dbt && '
-        #     '/app/.heroku/python/bin/dbt debug --profiles-dir /app/.dbt && '
-        #     '(/app/.heroku/python/bin/dbt run --models company_cagr --debug --profiles-dir /app/.dbt ; exit 0) 2>&1 | tee /tmp/dbt_cagr_output.log'
-        # )
         bash_command = (
-            'echo "Current DB: $DATABASE_URL"; '
-            'mkdir -p /app/.dbt; '  # Ensure the directory exists
-            'echo "$DBT_PROFILES" > /app/.dbt/profiles.yml; '  # Write the profiles.yml file
-            'export PYTHONPATH=$PYTHONPATH:/app/python/src; '
-            'cd /app/dbt/src/app; '
-            '/app/.heroku/python/bin/dbt debug --profiles-dir /app/.dbt || true; '
-            '/app/.heroku/python/bin/dbt run --models company_cagr --debug --profiles-dir /app/.dbt || true '
-            '2>&1 | tee /tmp/dbt_cagr_output.log'
+            f'export PYTHONPATH=$PYTHONPATH:/app/python/src && '
+            f'cd /app/dbt && '  # Adjusted path for Heroku
+            f'(dbt run --models company_cagr ; exit 0) '
+            f'> /tmp/dbt_cagr_output.log 2>&1'
         )
-
-        # bash_command = (
-        #     f'echo "Current DB: $DATABASE_URL" && '
-        #     f'export PYTHONPATH=$PYTHONPATH:/app/python/src && '
-        #     f'cd /app/dbt && '
-        #     f'(dbt run --models company_cagr ; exit 0) '
-        #     f'> /tmp/dbt_cagr_output.log 2>&1'
-        # )
     else:
         bash_command = (
             'export ENV={{ var.value.ENV }} && '
@@ -101,7 +82,7 @@ with DAG(
     # Run dbt model
     dbt_run = BashOperator(
         task_id='dbt_run_model_cagr_metric',
-        bash_command=bash_command,
+        bash_command=bash_command + " > /dev/null 2>&1",
         env=env_vars,
     )
 
