@@ -41,12 +41,15 @@ def get_dbt_bash_command(env: str, db_connection_string: str) -> Tuple[str, Dict
         # )
         bash_command = (
             'echo "Current DB: $DATABASE_URL"; '
+            'mkdir -p /app/.dbt; '  # Ensure the directory exists
+            'echo "$DBT_PROFILES" > /app/.dbt/profiles.yml; '  # Write the profiles.yml file
             'export PYTHONPATH=$PYTHONPATH:/app/python/src; '
             'cd /app/dbt/src/app; '
             '/app/.heroku/python/bin/dbt debug --profiles-dir /app/.dbt || true; '
             '/app/.heroku/python/bin/dbt run --models company_cagr --debug --profiles-dir /app/.dbt || true '
             '2>&1 | tee /tmp/dbt_cagr_output.log'
         )
+
         # bash_command = (
         #     f'echo "Current DB: $DATABASE_URL" && '
         #     f'export PYTHONPATH=$PYTHONPATH:/app/python/src && '
