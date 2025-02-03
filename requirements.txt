@@ -1,14 +1,15 @@
 # Airflow core
 apache-airflow==2.9.3
-apache-airflow-providers-common-sql==1.20.0
+#apache-airflow-providers-common-sql==1.20.0
 apache-airflow-providers-http==4.13.3
 apache-airflow-providers-postgres==5.14.0
 apache-airflow-providers-amazon==9.2.0
 
 # dbt
-apache-airflow-providers-common-sql==1.5.0
+apache-airflow-providers-common-sql==1.19.0
 dbt-core==1.7.4
 dbt-postgres==1.7.4
+sqlparse<0.5
 
 # Web framework and session management
 Flask>=2.2,<2.3
