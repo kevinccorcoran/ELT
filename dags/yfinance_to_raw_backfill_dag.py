@@ -59,7 +59,7 @@ dag = DAG(
     dag_id="yfinance_to_raw_backfill_dag",
     default_args=default_args,
     description="Ad hoc DAG for historical yfinance data",
-    schedule_interval='@daily',  # Ad hoc execution only
+    schedule_interval=None,  # Ad hoc execution only
     catchup=True,  # Disable automatic backfills
     max_active_runs=1  # Only allow one active run at a time
 )
