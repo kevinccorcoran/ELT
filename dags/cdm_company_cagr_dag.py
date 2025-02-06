@@ -37,8 +37,7 @@ def get_dbt_bash_command(env: str, db_connection_string: str) -> Tuple[str, Dict
         bash_command = (
             f'export PYTHONPATH=$PYTHONPATH:/app/python/src && '
             f'cd /app/dbt && '  # Adjusted path for Heroku
-            f'(dbt run --models company_cagr ; exit 0) '
-            f'> /tmp/dbt_cagr_output.log 2>&1'
+            f'(dbt run --models company_cagr) '
         )
         env_vars = {
             "DATABASE_URL": db_connection_string,  # Heroku provides this dynamically
@@ -47,9 +46,12 @@ def get_dbt_bash_command(env: str, db_connection_string: str) -> Tuple[str, Dict
     else:
         bash_command = (
             'export ENV={{ var.value.ENV }} && '
-            'export DATABASE_URL={{ var.value.DATABASE_URL }} && '
+            'export DB_HOST={{ var.value.DB_HOST }} && '
+            'export DB_PORT={{ var.value.DB_PORT }} && '
+            'export DB_USER={{ var.value.DB_USER }} && '
+            'export DB_PASSWORD={{ var.value.DB_PASSWORD }} && '
             'echo "Airflow ENV: $ENV" && '
-            'echo "DATABASE_URL: $DATABASE_URL" && '
+            'echo "DB_PORT: $DB_PORT" && '
             'cd /Users/kevin/repos/ELT_private/dbt/src/app && '
             '( /Users/kevin/.pyenv/shims/dbt run --models company_cagr || true) '
         )
