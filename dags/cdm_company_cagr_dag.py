@@ -34,10 +34,17 @@ def get_dbt_bash_command(env: str, db_connection_string: str) -> Tuple[str, Dict
     Generate the Bash command and environment variables dynamically for running dbt.
     """
     if env == "heroku_postgres":
+        # bash_command = (
+        #     f'export PYTHONPATH=$PYTHONPATH:/app/python/src && '
+        #     f'cd /app/dbt && '  # Adjusted path for Heroku
+        #     f'(dbt run --models company_cagr) '
+        # )
         bash_command = (
-            f'export PYTHONPATH=$PYTHONPATH:/app/python/src && '
-            f'cd /app/dbt && '  # Adjusted path for Heroku
-            f'(dbt run --models company_cagr) '
+            "export PYTHONPATH=$PYTHONPATH:/app/python/src && "
+            "export PATH=$PATH:/app/.heroku/python/bin && "  # Ensure dbt is in PATH
+            "cd /app/dbt && "
+            "/app/.heroku/python/bin/dbt debug && "  # Debug first to check connection
+            "/app/.heroku/python/bin/dbt run --models company_cagr"
         )
         env_vars = {
             "DATABASE_URL": db_connection_string,  # Heroku provides this dynamically
