@@ -1,0 +1,42 @@
+my_project:
+  target: "{{ env_var('DBT_TARGET', 'local_dev') }}"  # Default to 'local_dev'
+  outputs:
+    local_dev:
+      type: postgres
+      host: "{{ env_var('LOCAL_DB_HOST', 'localhost') }}"
+      user: "{{ env_var('LOCAL_DB_USER', 'my_local_user') }}"
+      password: "{{ env_var('LOCAL_DB_PASSWORD', 'my_local_password') }}"
+      port: "{{ env_var('LOCAL_DB_PORT', '5432') | as_number }}"
+      dbname: "{{ env_var('LOCAL_DB_NAME', 'my_local_db') }}"
+      schema: "{{ env_var('LOCAL_DB_SCHEMA', 'dev') }}"  # Default schema
+      threads: 4
+
+    local_staging:
+      type: postgres
+      host: "{{ env_var('LOCAL_DB_HOST', 'localhost') }}"
+      user: "{{ env_var('LOCAL_DB_USER', 'my_local_user') }}"
+      password: "{{ env_var('LOCAL_DB_PASSWORD', 'my_local_password') }}"
+      port: "{{ env_var('LOCAL_DB_PORT', '5432') | as_number }}"
+      dbname: "{{ env_var('LOCAL_DB_NAME', 'my_local_db') }}"
+      schema: "{{ env_var('LOCAL_DB_SCHEMA', 'staging') }}"  # Staging schema
+      threads: 4
+
+    heroku_dev:
+      type: postgres
+      host: "{{ env_var('HEROKU_DB_HOST') }}"
+      user: "{{ env_var('HEROKU_DB_USER') }}"
+      password: "{{ env_var('HEROKU_DB_PASSWORD') }}"
+      port: "{{ env_var('HEROKU_DB_PORT') | as_number }}"
+      dbname: "{{ env_var('HEROKU_DB_NAME') }}"
+      schema: "{{ env_var('HEROKU_DB_SCHEMA', 'dev') }}"  # Default to 'dev'
+      threads: 4
+
+    heroku_staging:
+      type: postgres
+      host: "{{ env_var('HEROKU_DB_HOST') }}"
+      user: "{{ env_var('HEROKU_DB_USER') }}"
+      password: "{{ env_var('HEROKU_DB_PASSWORD') }}"
+      port: "{{ env_var('HEROKU_DB_PORT') | as_number }}"
+      dbname: "{{ env_var('HEROKU_DB_NAME') }}"
+      schema: "{{ env_var('HEROKU_DB_SCHEMA', 'staging') }}"  # Default to 'staging'
+      threads: 4
