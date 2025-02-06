@@ -52,22 +52,20 @@ def get_dbt_bash_command(env: str, db_connection_string: str) -> Tuple[str, Dict
         }
     else:
         bash_command = (
-            'export ENV={{ var.value.ENV }} && '
-            'export DB_HOST={{ var.value.DB_HOST }} && '
-            'export DB_PORT={{ var.value.DB_PORT }} && '
-            'export DB_USER={{ var.value.DB_USER }} && '
-            'export DB_PASSWORD={{ var.value.DB_PASSWORD }} && '
             'echo "Airflow ENV: $ENV" && '
+            'echo "ENV: $ENV" && '
             'echo "DB_PORT: $DB_PORT" && '
+            'echo "DB_NAME: $DB_NAME" && '
             'cd /Users/kevin/repos/ELT_private/dbt/src/app && '
-            '( /Users/kevin/.pyenv/shims/dbt run --models company_cagr || true) '
+            '/Users/kevin/.pyenv/shims/dbt run --models company_cagr || true'
         )
+        # Set in local Airflow
         env_vars = {
-            "ENV": env,  # Include ENV
-            "DB_HOST": "{{ var.value.DB_HOST }}",
-            "DB_PORT": "{{ var.value.DB_PORT }}",
-            "DB_USER": "{{ var.value.DB_USER }}",
-            "DB_PASSWORD": "{{ var.value.DB_PASSWORD }}",
+            "ENV": Variable.get("ENV"),
+            "DB_HOST": Variable.get("DB_HOST"),
+            "DB_PORT": Variable.get("DB_PORT"),
+            "DB_USER": Variable.get("DB_USER"),
+            "DB_PASSWORD": Variable.get("DB_PASSWORD")
         }
 
     return bash_command, env_vars
