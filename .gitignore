@@ -45,7 +45,7 @@ Thumbs.db
 *.swp
 *~
 # Ignore dbt profiles file
-profiles.yml
+#profiles.yml
 pytest_tests/matrix_notify
 airflow_env/
 config/*.cfg
