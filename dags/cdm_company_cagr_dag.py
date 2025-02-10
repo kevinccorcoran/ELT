@@ -49,6 +49,10 @@ def get_dbt_bash_command(env: str, db_connection_string: str) -> Tuple[str, Dict
         bash_command = (
             "export PYTHONPATH=$PYTHONPATH:/app/python/src && "
             "export PATH=$PATH:/app/.heroku/python/bin && "
+            "export DB_HOST={{ var.value.DB_HOST }} && "  # Explicitly export DB_HOST
+            "export DB_PORT={{ var.value.DB_PORT }} && "  # Also ensure DB_PORT is set
+            "export DB_USER={{ var.value.DB_USER }} && "  # Ensure DB_USER is set
+            "export DB_PASSWORD={{ var.value.DB_PASSWORD }} && "  # Ensure DB_PASSWORD is set
             "cd /app/dbt/src/app && "  # Navigate to the correct directory
             "/app/.heroku/python/bin/dbt debug --profiles-dir /app/.dbt --project-dir /app/dbt/src/app && "
             "/app/.heroku/python/bin/dbt run --profiles-dir /app/.dbt --project-dir /app/dbt/src/app --models company_cagr"
