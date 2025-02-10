@@ -39,12 +39,19 @@ def get_dbt_bash_command(env: str, db_connection_string: str) -> Tuple[str, Dict
         #     f'cd /app/dbt && '  # Adjusted path for Heroku
         #     f'(dbt run --models company_cagr) '
         # )
+        # bash_command = (
+        #     "export PYTHONPATH=$PYTHONPATH:/app/python/src && "
+        #     "export PATH=$PATH:/app/.heroku/python/bin && "  # Ensure dbt is in PATH
+        #     "cd /app/dbt && "
+        #     "/app/.heroku/python/bin/dbt debug && "  # Debug first to check connection
+        #     "/app/.heroku/python/bin/dbt run --models company_cagr"
+        # )
         bash_command = (
             "export PYTHONPATH=$PYTHONPATH:/app/python/src && "
-            "export PATH=$PATH:/app/.heroku/python/bin && "  # Ensure dbt is in PATH
-            "cd /app/dbt && "
-            "/app/.heroku/python/bin/dbt debug && "  # Debug first to check connection
-            "/app/.heroku/python/bin/dbt run --models company_cagr"
+            "export PATH=$PATH:/app/.heroku/python/bin && "
+            "cd /app/dbt/src/app && "  # Navigate to the correct directory
+            "/app/.heroku/python/bin/dbt debug --profiles-dir /app/.dbt --project-dir /app/dbt/src/app && "
+            "/app/.heroku/python/bin/dbt run --profiles-dir /app/.dbt --project-dir /app/dbt/src/app --models company_cagr"
         )
         env_vars = {
             "DATABASE_URL": db_connection_string,  # Heroku provides this dynamically
