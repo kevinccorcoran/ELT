@@ -58,8 +58,7 @@ def get_dbt_bash_command(env: str, db_connection_string: str) -> Tuple[str, Dict
             "/app/.heroku/python/bin/dbt run --profiles-dir /app/.dbt --project-dir /app/dbt/src/app --models company_cagr"
         )
         env_vars = {
-            "DATABASE_URL": db_connection_string,  # Heroku provides this dynamically
-            "ENV": env,
+            "ENV": env
         }
     else:
         bash_command = (
