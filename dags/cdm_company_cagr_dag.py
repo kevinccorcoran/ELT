@@ -54,13 +54,14 @@ def get_dbt_bash_command(env: str, db_connection_string: str) -> Tuple[str, Dict
         #     "DB_PASSWORD": Variable.get("DB_PASSWORD"),
         #     "DB_DATABASE": Variable.get("DB_DATABASE"),  # Ensure the correct database name is set
         # }
+    
         env_vars = {
-            "ENV": Variable.get("ENV", default_var="dev"),  # Ensure ENV is set
+            "ENV": Variable.get("ENV", default_var="heroku_postgres"),  # Ensure ENV is set
             "DB_HOST": Variable.get("DB_HOST"),
             "DB_PORT": Variable.get("DB_PORT"),
             "DB_USER": Variable.get("DB_USER"),
             "DB_PASSWORD": Variable.get("DB_PASSWORD"),
-            "DB_DATABASE": Variable.get("DB_DATABASE"),
+            "DB_DATABASE": Variable.get("DB_DATABASE"),  # Ensure correct database name
         }
 
         bash_command = (
@@ -71,7 +72,7 @@ def get_dbt_bash_command(env: str, db_connection_string: str) -> Tuple[str, Dict
             f"export DB_PORT={env_vars['DB_PORT']} && "
             f"export DB_USER={env_vars['DB_USER']} && "
             f"export DB_PASSWORD={env_vars['DB_PASSWORD']} && "
-            f"export DB_DATABASE={env_vars['DB_DATABASE']} && "
+            f"export DB_DATABASE={env_vars['DB_DATABASE']} && "  # Explicitly set DB_DATABASE
             "cd /app/dbt/src/app && "
             "/app/.heroku/python/bin/dbt debug --profiles-dir /app/.dbt --project-dir /app/dbt/src/app && "
             "/app/.heroku/python/bin/dbt run --profiles-dir /app/.dbt --project-dir /app/dbt/src/app --models company_cagr"
