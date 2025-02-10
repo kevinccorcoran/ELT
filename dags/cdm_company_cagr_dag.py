@@ -49,16 +49,22 @@ def get_dbt_bash_command(env: str, db_connection_string: str) -> Tuple[str, Dict
         bash_command = (
             "export PYTHONPATH=$PYTHONPATH:/app/python/src && "
             "export PATH=$PATH:/app/.heroku/python/bin && "
-            "export DB_HOST={{ var.value.DB_HOST }} && "  # Explicitly export DB_HOST
-            "export DB_PORT={{ var.value.DB_PORT }} && "  # Also ensure DB_PORT is set
-            "export DB_USER={{ var.value.DB_USER }} && "  # Ensure DB_USER is set
-            "export DB_PASSWORD={{ var.value.DB_PASSWORD }} && "  # Ensure DB_PASSWORD is set
-            "cd /app/dbt/src/app && "  # Navigate to the correct directory
+            "export DB_HOST={{ env_var('DB_HOST') }} && "
+            "export DB_PORT={{ env_var('DB_PORT') }} && "
+            "export DB_USER={{ env_var('DB_USER') }} && "
+            "export DB_PASSWORD={{ env_var('DB_PASSWORD') }} && "
+            "export DB_DATABASE={{ env_var('DB_DATABASE') }} && "  # Ensure the correct database name is set
+            "cd /app/dbt/src/app && "
             "/app/.heroku/python/bin/dbt debug --profiles-dir /app/.dbt --project-dir /app/dbt/src/app && "
             "/app/.heroku/python/bin/dbt run --profiles-dir /app/.dbt --project-dir /app/dbt/src/app --models company_cagr"
         )
         env_vars = {
-            "ENV": env
+            "ENV": env,  # Keep the ENV variable if needed
+            "DB_HOST": Variable.get("DB_HOST"),
+            "DB_PORT": Variable.get("DB_PORT"),
+            "DB_USER": Variable.get("DB_USER"),
+            "DB_PASSWORD": Variable.get("DB_PASSWORD"),
+            "DB_DATABASE": Variable.get("DB_DATABASE"),  # Ensure the correct database name is set
         }
     else:
         bash_command = (
