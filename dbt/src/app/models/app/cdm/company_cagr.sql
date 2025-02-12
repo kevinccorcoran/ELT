@@ -1,9 +1,9 @@
--- {% do log("Current ENV: " ~ env_var('ENV'), info=true) %}
+{% do log("Current ENV: " ~ env_var('ENV'), info=true) %}
 
 {{
     config(
         materialized='table',
-        database=env_var('DB_DATABASE'),
+        database=env_var('ENV'),
         schema='cdm'
     )
 }}
