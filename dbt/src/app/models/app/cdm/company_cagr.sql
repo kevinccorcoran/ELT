@@ -1,4 +1,4 @@
-{% do log("Current ENV: " ~ env_var('ENV'), info=true) %}
+{% do log("Current ENV: " ~ env_var('DB_DATABASE'), info=true) %}
 
 {{
     config(
