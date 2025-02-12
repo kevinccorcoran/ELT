@@ -3,7 +3,7 @@
 {{
     config(
         materialized='table',
-        database=env_var('DB_DATABASE'),
+        database=env_var('ENV'),
         schema='cdm'
     )
 }}
