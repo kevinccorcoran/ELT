@@ -46,7 +46,7 @@ def get_dbt_bash_command(env: str, db_connection_string: str) -> Tuple[str, Dict
         bash_command = (
             "export PYTHONPATH=$PYTHONPATH:/app/python/src && "
             "export PATH=$PATH:/app/.heroku/python/bin && "
-            f"export ENV={env_vars['ENV']} && "  # Ensure ENV is explicitly exported
+            #f"export ENV={env_vars['ENV']} && "  # Ensure ENV is explicitly exported
             f"export DB_HOST={env_vars['DB_HOST']} && "
             f"export DB_PORT={env_vars['DB_PORT']} && "
             f"export DB_USER={env_vars['DB_USER']} && "
