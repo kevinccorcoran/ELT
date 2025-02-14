@@ -22,8 +22,8 @@ clean-targets:
 # Model Configuration
 models:
   dbt_project:
-    # +database: "{{ env_var('ENV') }}"
-    +database: "{{ env_var('DB_DATABASE') }}"
+    +database: "{{ env_var('ENV') }}"
+    # +database: "{{ env_var('DB_DATABASE') }}"
     +schema: cdm  # Default schema for most models
 
     # Schema Overrides for Specific Model Folders
