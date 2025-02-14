@@ -36,14 +36,15 @@ def get_dbt_bash_command(env: str, db_connection_string: str) -> Tuple[str, Dict
     if env == "heroku_postgres":
         env_vars = {
             "ENV": Variable.get("ENV", default_var="heroku_postgres"),  # Ensure ENV is set
-            "DB_HOST": Variable.get("DB_HOST"),
-            "DB_PORT": Variable.get("DB_PORT"),
-            "DB_USER": Variable.get("DB_USER"),
-            "DB_PASSWORD": Variable.get("DB_PASSWORD"),
-            "DB_DATABASE": Variable.get("DB_DATABASE"),  # Ensure correct database name
+            # "DB_HOST": Variable.get("DB_HOST"),
+            # "DB_PORT": Variable.get("DB_PORT"),
+            # "DB_USER": Variable.get("DB_USER"),
+            # "DB_PASSWORD": Variable.get("DB_PASSWORD"),
+            # "DB_DATABASE": Variable.get("DB_DATABASE"),  # Ensure correct database name
         }
 
         bash_command = (
+            'echo "Airflow ENV: $ENV" && '
             "export PYTHONPATH=$PYTHONPATH:/app/python/src && "
             "export PATH=$PATH:/app/.heroku/python/bin && "
             #f"export ENV={env_vars['ENV']} && "  # Ensure ENV is explicitly exported
