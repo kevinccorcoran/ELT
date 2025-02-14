@@ -4,18 +4,18 @@ from airflow import DAG
 from airflow.models import Variable
 from airflow.operators.bash import BashOperator
 from airflow.operators.trigger_dagrun import TriggerDagRunOperator
+from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
+from typing import Tuple, Dict
 import logging
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-
 def get_db_connection_string(env: str) -> str:
-    """ Retrieve the database connection string based on the environment. """
     env_to_var_map = {
         "dev": "DEV_DB_CONNECTION_STRING",
         "staging": "STAGING_DB_CONNECTION_STRING",
-        "heroku_postgres": "DATABASE_URL",  # Heroku provides a single DATABASE_URL
+        "heroku_postgres": "DATABASE_URL",
     }
 
     if env not in env_to_var_map:
@@ -27,41 +27,89 @@ def get_db_connection_string(env: str) -> str:
 
     return connection_string
 
+from typing import Tuple, Dict
 
-def get_dbt_bash_command(env: str, db_connection_string: str) -> str:
-    """ Generate the Bash command for running dbt dynamically based on environment. """
-
+def get_dbt_bash_command(env: str, db_connection_string: str) -> Tuple[str, Dict[str, str]]:
+    """
+    Generate the Bash command and environment variables dynamically for running dbt.
+    """
     if env == "heroku_postgres":
-        bash_command = f"""
-        export DATABASE_URL={db_connection_string} &&
-        export DB_USER=$(echo $DATABASE_URL | awk -F'[:@]' '{{print $4}}') &&
-        export DB_PASSWORD=$(echo $DATABASE_URL | awk -F'[:@]' '{{print $5}}') &&
-        export DB_HOST=$(echo $DATABASE_URL | awk -F'[:@]' '{{print $6}}') &&
-        export DB_PORT=$(echo $DATABASE_URL | awk -F'[:/]' '{{print $7}}') &&
-        export DB_DATABASE=$(echo $DATABASE_URL | awk -F'[/:]' '{{print $8}}') &&
-        cd /app/dbt/src/app &&
-        /app/.heroku/python/bin/dbt debug --profiles-dir /app/.dbt --project-dir /app/dbt/src/app &&
-        /app/.heroku/python/bin/dbt run --profiles-dir /app/.dbt --project-dir /app/dbt/src/app --models company_cagr
-        """
+        env_vars = {
+            "ENV": Variable.get("ENV", default_var="heroku_postgres"),  # Ensure ENV is set
+            "DB_HOST": Variable.get("DB_HOST"),
+            "DB_PORT": Variable.get("DB_PORT"),
+            "DB_USER": Variable.get("DB_USER"),
+            "DB_PASSWORD": Variable.get("DB_PASSWORD"),
+            "DB_DATABASE": Variable.get("DB_DATABASE"),  # Ensure correct database name
+        }
+
+        bash_command = (
+            "export PYTHONPATH=$PYTHONPATH:/app/python/src && "
+            "export PATH=$PATH:/app/.heroku/python/bin && "
+            #f"export ENV={env_vars['ENV']} && "  # Ensure ENV is explicitly exported
+            f"export DB_HOST={env_vars['DB_HOST']} && "
+            f"export DB_PORT={env_vars['DB_PORT']} && "
+            f"export DB_USER={env_vars['DB_USER']} && "
+            f"export DB_PASSWORD={env_vars['DB_PASSWORD']} && "
+            f"export DB_DATABASE={env_vars['DB_DATABASE']} && "  # Explicitly set DB_DATABASE
+            "cd /app/dbt/src/app && "
+            "/app/.heroku/python/bin/dbt debug --profiles-dir /app/.dbt --project-dir /app/dbt/src/app && "
+            "/app/.heroku/python/bin/dbt run --profiles-dir /app/.dbt --project-dir /app/dbt/src/app --models company_cagr"
+        )
+
     else:
-        bash_command = f"""
-        export ENV={env} &&
-        export DB_HOST=$(echo {db_connection_string} | awk -F'[:@]' '{{print $6}}') &&
-        export DB_PORT=$(echo {db_connection_string} | awk -F'[:/]' '{{print $7}}') &&
-        export DB_USER=$(echo {db_connection_string} | awk -F'[:@]' '{{print $4}}') &&
-        export DB_PASSWORD=$(echo {db_connection_string} | awk -F'[:@]' '{{print $5}}') &&
-        export DB_DATABASE=$(echo {db_connection_string} | awk -F'[/:]' '{{print $8}}') &&
-        echo "Airflow ENV: $ENV" &&
-        echo "DB_HOST: $DB_HOST" &&
-        echo "DB_PORT: $DB_PORT" &&
-        echo "DB_USER: $DB_USER" &&
-        echo "DB_DATABASE: $DB_DATABASE" &&
-        cd /Users/kevin/repos/ELT_private/dbt/src/app &&
-        /Users/kevin/.pyenv/shims/dbt run --models company_cagr || true
-        """
+        bash_command = (
+            'echo "Airflow ENV: $ENV" && '
+            'echo "ENV: $ENV" && '
+            'echo "DB_PORT: $DB_PORT" && '
+            'echo "DB_NAME: $DB_NAME" && '
+            'cd /Users/kevin/repos/ELT_private/dbt/src/app && '
+            '/Users/kevin/.pyenv/shims/dbt run --models company_cagr || true'
+        )
+        # Set in local Airflow
+        env_vars = {
+            "ENV": Variable.get("ENV"),
+            "DB_HOST": Variable.get("DB_HOST"),
+            "DB_PORT": Variable.get("DB_PORT"),
+            "DB_USER": Variable.get("DB_USER"),
+            "DB_PASSWORD": Variable.get("DB_PASSWORD")
+        }
 
-    return bash_command
+    return bash_command, env_vars
 
+# def get_dbt_bash_command(env: str, db_connection_string: str) -> Tuple[str, Dict[str, str]]:
+#     """
+#     Generate the Bash command and environment variables dynamically for running dbt.
+#     """
+#     if env == "heroku_postgres":
+#         bash_command = (
+#             f'export PYTHONPATH=$PYTHONPATH:/app/python/src && '
+#             f'cd /app/dbt && '  # Adjusted path for Heroku
+#             f'(dbt run --models company_cagr ; exit 0) '
+#             f'> /tmp/dbt_cagr_output.log 2>&1'
+#         )
+#         env_vars = {
+#             "DATABASE_URL": db_connection_string,  # Heroku provides this dynamically
+#         }
+#     else:
+#         bash_command = (
+#             'export ENV={{ var.value.ENV }} && '
+#             'export DB_HOST={{ var.value.DB_HOST }} && '
+#             'export DB_PORT={{ var.value.DB_PORT }} && '
+#             'export DB_USER={{ var.value.DB_USER }} && '
+#             'export DB_PASSWORD={{ var.value.DB_PASSWORD }} && '
+#             'echo "Airflow ENV: $ENV" && '
+#             'echo "DB_PORT: $DB_PORT" && '
+#             'cd /Users/kevin/repos/ELT_private/dbt/src/app && '
+#             '( /Users/kevin/.pyenv/shims/dbt run --models company_cagr || true) '
+#         )
+
+#     env_vars = {
+#         'DATABASE_URL': db_connection_string,
+#         'ENV': env,
+#     }
+
+#     return bash_command, env_vars
 
 # Retrieve environment variables
 env = Variable.get("ENV", default_var="dev")
@@ -85,17 +133,17 @@ with DAG(
     catchup=False,
 ) as dag:
 
-    # Generate Bash command for dbt
-    bash_command = get_dbt_bash_command(env, db_connection_string)
+    # Generate Bash command and environment variables
+    bash_command, env_vars = get_dbt_bash_command(env, db_connection_string)
 
     # Run dbt model
     dbt_run = BashOperator(
         task_id='dbt_run_model_cagr_metric',
         bash_command=bash_command,
-        env={"DATABASE_URL": db_connection_string},  # Only pass DATABASE_URL
+        env=env_vars,
     )
 
-    # Trigger downstream DAGs
+    # Task to trigger downstream DAGs
     trigger_metrics_ticker_movement_analysis_dag = TriggerDagRunOperator(
         task_id='trigger_dag_metrics_ticker_movement_analysis_table',
         trigger_dag_id="metrics_ticker_movement_analysis_dag",
@@ -118,7 +166,6 @@ with DAG(
         >> trigger_metrics_cagr_metrics_dag
         >> trigger_metrics_next_n_cagr_ratios_dag
     )
-
 
 # # Standard library imports
 # from datetime import timedelta
