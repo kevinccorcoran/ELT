@@ -1,12 +1,24 @@
+# dbt_project:
+#   target: dev  # This will serve as your default environment
+#   outputs:
+#     dev:
+#       type: postgres
+#       threads: 1
+#       host: "{{ env_var('DB_HOST') }}"
+#       port: "{{ env_var('DB_PORT') | int }}"
+#       user: "{{ env_var('DB_USER') }}"
+#       pass: "{{ env_var('DB_PASSWORD') }}"
+#       dbname: "{{ env_var('DB_DATABASE') }}"
+#       schema: cdm
 dbt_project:
-  target: dev  # This will serve as your default environment
+  target: dev  # Default environment
   outputs:
     dev:
       type: postgres
       threads: 1
-      host: "{{ env_var('DB_HOST') }}"
-      port: "{{ env_var('DB_PORT') | int }}"
-      user: "{{ env_var('DB_USER') }}"
-      pass: "{{ env_var('DB_PASSWORD') }}"
-      dbname: "{{ env_var('DB_DATABASE') }}"
+      host: "{{ env_var('DATABASE_URL').split('@')[1].split(':')[0] }}"  # Extracts host from DATABASE_URL
+      port: "{{ env_var('DATABASE_URL').split(':')[-1].split('/')[0] | int }}"  # Extracts port
+      user: "{{ env_var('DATABASE_URL').split('//')[1].split(':')[0] }}"  # Extracts username
+      pass: "{{ env_var('DATABASE_URL').split(':')[2].split('@')[0] }}"  # Extracts password
+      dbname: "{{ env_var('DATABASE_URL').split('/')[-1] }}"  # Extracts database name
       schema: cdm
