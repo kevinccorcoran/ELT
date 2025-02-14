@@ -33,7 +33,7 @@ def get_dbt_bash_command(env: str) -> Tuple[str, Dict[str, str]]:
             "export PYTHONPATH=$PYTHONPATH:/app/python/src && "
             "export PATH=$PATH:/app/.heroku/python/bin && "
             "export DATABASE_URL=$DATABASE_URL && "
-            f'export DB_DATABASE={Variable.get("DB_DATABASE", default_var="default_database_name")} && '
+            f'export DB_DATABASE={Variable.get("DB_DATABASE", default_var="da909ge4nntude")} && '
             "cd /app/dbt/src/app && "
             "/app/.heroku/python/bin/dbt debug --profiles-dir /app/.dbt --project-dir /app/dbt/src/app && "
             "/app/.heroku/python/bin/dbt run --profiles-dir /app/.dbt --project-dir /app/dbt/src/app --models company_cagr"
