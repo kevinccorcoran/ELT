@@ -16,11 +16,12 @@ dbt_project:
     dev:
       type: postgres
       threads: 1
-      host: "{{ env_var('DB_HOST') }}"
-      port: "{{ env_var('DB_PORT') | int }}"
-      user: "{{ env_var('DB_USER') }}"
-      pass: "{{ env_var('DB_PASSWORD') }}"
-      dbname: "{{ env_var('DB_DATABASE') }}"
+      host: "{{ env_var('DATABASE_URL').split('@')[1].split(':')[0] }}"  # Extract host
+      port: "{{ env_var('DATABASE_URL').split(':')[-1].split('/')[0] | int }}"  # Extract port
+      user: "{{ env_var('DATABASE_URL').split('//')[1].split(':')[0] }}"  # Extract user
+      pass: "{{ env_var('DATABASE_URL').split(':')[2].split('@')[0] }}"  # Extract password
+      dbname: "{{ env_var('DATABASE_URL').split('/')[-1] }}"  # Extract database name
       schema: cdm
+
 
 
