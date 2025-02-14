@@ -20,7 +20,8 @@ dbt_project:
       port: "{{ env_var('DATABASE_URL').split(':')[-1].split('/')[0] | int }}"  # Extract port
       user: "{{ env_var('DATABASE_URL').split('//')[1].split(':')[0] }}"  # Extract user
       pass: "{{ env_var('DATABASE_URL').split(':')[2].split('@')[0] }}"  # Extract password
-      dbname: "{{ env_var('DATABASE_URL').split('/')[-1] }}"  # Extract database name
+      #dbname: "{{ env_var('DATABASE_URL').split('/')[-1] }}"  # Extract database name
+      dbname: "{{ env_var('DATABASE_URL').split('/')[-1].split('?')[0] }}"  # Ensures query params are removed
       schema: cdm
 
 
