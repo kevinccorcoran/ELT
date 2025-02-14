@@ -22,7 +22,8 @@ clean-targets:
 # Model Configuration
 models:
   dbt_project:
-    +database: "{{ env_var('ENV') }}"
+    #+database: "{{ env_var('ENV') }}"
+    +database: "{{ env_var('DATABASE_URL').split('/')[-1].split('?')[0] }}"
     # +database: "{{ env_var('DB_DATABASE') }}"
     +schema: cdm  # Default schema for most models
 
