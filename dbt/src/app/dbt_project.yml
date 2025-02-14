@@ -22,7 +22,8 @@ clean-targets:
 # Model Configuration
 models:
   dbt_project:
-    +database: "{{ env_var('ENV') }}"
+    # +database: "{{ env_var('ENV') }}"
+    +database: "{{ env_var('ENV', 'heroku_postgres') }}"
     +schema: cdm  # Default schema for most models
 
     # Schema Overrides for Specific Model Folders

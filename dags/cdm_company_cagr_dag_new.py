@@ -35,7 +35,7 @@ def get_dbt_bash_command(env: str, db_connection_string: str) -> Tuple[str, Dict
     """
     if env == "heroku_postgres":
         env_vars = {
-            #"ENV": Variable.get("ENV", default_var="heroku_postgres"),  # Ensure ENV is set
+            "ENV": Variable.get("ENV", default_var="heroku_postgres"),  # Ensure ENV is set
             "DB_HOST": Variable.get("DB_HOST"),
             "DB_PORT": Variable.get("DB_PORT"),
             "DB_USER": Variable.get("DB_USER"),
@@ -46,7 +46,7 @@ def get_dbt_bash_command(env: str, db_connection_string: str) -> Tuple[str, Dict
         bash_command = (
             "export PYTHONPATH=$PYTHONPATH:/app/python/src && "
             "export PATH=$PATH:/app/.heroku/python/bin && "
-            #f"export ENV={env_vars['ENV']} && "  # Ensure ENV is explicitly exported
+            f"export ENV={env_vars['ENV']} && "  # Ensure ENV is explicitly exported
             f"export DB_HOST={env_vars['DB_HOST']} && "
             f"export DB_PORT={env_vars['DB_PORT']} && "
             f"export DB_USER={env_vars['DB_USER']} && "
@@ -126,7 +126,7 @@ default_args = {
 }
 
 with DAG(
-    dag_id="cdm_company_cagr_dag",
+    dag_id="cdm_company_cagr_dag_new",
     description="DAG for creating metrics.cagr_metric",
     default_args=default_args,
     start_date=pendulum.today('UTC').subtract(days=1),
