@@ -48,11 +48,11 @@ def get_dbt_bash_command(env: str, db_connection_string: str) -> Tuple[str, Dict
             "export PYTHONPATH=$PYTHONPATH:/app/python/src && "
             "export PATH=$PATH:/app/.heroku/python/bin && "
             #f"export ENV={env_vars['ENV']} && "  # Ensure ENV is explicitly exported
-            f"export DB_HOST={env_vars['DB_HOST']} && "
-            f"export DB_PORT={env_vars['DB_PORT']} && "
-            f"export DB_USER={env_vars['DB_USER']} && "
-            f"export DB_PASSWORD={env_vars['DB_PASSWORD']} && "
-            f"export DB_DATABASE={env_vars['DB_DATABASE']} && "  # Explicitly set DB_DATABASE
+            # f"export DB_HOST={env_vars['DB_HOST']} && "
+            # f"export DB_PORT={env_vars['DB_PORT']} && "
+            # f"export DB_USER={env_vars['DB_USER']} && "
+            # f"export DB_PASSWORD={env_vars['DB_PASSWORD']} && "
+            # f"export DB_DATABASE={env_vars['DB_DATABASE']} && "  # Explicitly set DB_DATABASE
             "cd /app/dbt/src/app && "
             "/app/.heroku/python/bin/dbt debug --profiles-dir /app/.dbt --project-dir /app/dbt/src/app && "
             "/app/.heroku/python/bin/dbt run --profiles-dir /app/.dbt --project-dir /app/dbt/src/app --models company_cagr"
