@@ -8,7 +8,7 @@ dbt_project:
       port: "{{ env_var('DB_PORT') | int }}"
       user: "{{ env_var('DB_USER') }}"
       pass: "{{ env_var('DB_PASSWORD') }}"
-      dbname: "{{ env_var('DB_DATABASE') }}"
+      #dbname: "{{ env_var('DB_DATABASE') }}"
       schema: cdm
 
 
