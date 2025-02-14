@@ -47,6 +47,7 @@ def get_dbt_bash_command(env: str, db_connection_string: str) -> Tuple[str, Dict
             "export PYTHONPATH=$PYTHONPATH:/app/python/src && "
             "export PATH=$PATH:/app/.heroku/python/bin && "
             "export DATABASE_URL=$DATABASE_URL && "  # Ensure DATABASE_URL is explicitly exported
+            'export DB_DATABASE=da909ge4nntude && '
             "cd /app/dbt/src/app && "
             "/app/.heroku/python/bin/dbt debug --profiles-dir /app/.dbt --project-dir /app/dbt/src/app && "
             "/app/.heroku/python/bin/dbt run --profiles-dir /app/.dbt --project-dir /app/dbt/src/app --models company_cagr"
