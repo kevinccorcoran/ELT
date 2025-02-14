@@ -35,8 +35,11 @@ def get_dbt_bash_command(env: str, db_connection_string: str) -> Tuple[str, Dict
     """
     if env == "heroku_postgres":
         env_vars = {
-            "ENV": Variable.get("ENV", default_var="heroku_postgres"),  # Ensure ENV is set
-            "DATABASE_URL": db_connection_string,  # Use DATABASE_URL directly
+            "ENV": Variable.get("ENV"),
+            "DB_HOST": Variable.get("DB_HOST"),
+            "DB_PORT": Variable.get("DB_PORT"),
+            "DB_USER": Variable.get("DB_USER"),
+            "DB_PASSWORD": Variable.get("DB_PASSWORD")
         }
 
         bash_command = (

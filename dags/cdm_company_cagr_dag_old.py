@@ -39,8 +39,11 @@ with DAG(
         bash_command=(
             'export ENV={{ var.value.ENV }} && '
             'echo "Airflow ENV: $ENV" && '
-            'cd /Users/kevin/Dropbox/applications/ELT/dbt/src/app && '
-            'dbt run --models company_cagr'
+            #'cd /Users/kevin/Dropbox/applications/ELT/dbt/src/app && '
+            #'dbt run --models company_cagr'
+            'cd /Users/kevin/repos/ELT_private/dbt/src/app && '
+            '/Users/kevin/.pyenv/shims/dbt run --models company_cagr || true'
+        
         ),
     )
 
