@@ -9,7 +9,7 @@ dbt_project:
       user: "{{ env_var('DB_USER') }}"
       pass: "{{ env_var('DB_PASSWORD') }}"
       #dbname: "{{ env_var('DB_DATABASE') }}"
-      dbname: "{{ env_var('DB_DATABASE', 'da909ge4nntude') }}"  # Fallback if missing
+      dbname: "{{ env_var('DB_DATABASE') }}"  # Fallback if missing
       schema: cdm
 
 
