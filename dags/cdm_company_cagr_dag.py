@@ -74,7 +74,7 @@ default_args = {
 }
 
 with DAG(
-    dag_id="cdm_company_cagr_dag_new",
+    dag_id="cdm_company_cagr_dag",
     description="DAG for creating metrics.cagr_metric",
     default_args=default_args,
     start_date=pendulum.today("UTC").subtract(days=1),
