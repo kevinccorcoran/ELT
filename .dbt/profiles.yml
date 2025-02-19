@@ -11,7 +11,3 @@ dbt_project:
       #dbname: "{{ env_var('DB_DATABASE') }}"
       dbname: "{{ env_var('ENV') }}"  # Fallback if missing
       schema: cdm
-
-
-
-
