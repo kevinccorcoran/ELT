@@ -38,6 +38,6 @@ python-dotenv==1.0.1
 
 # HTTP requests and external data fetching
 requests==2.31.0
-yfinance==0.2.49
+yfinance==0.2.54
 
 pyarrow==19.0.1
