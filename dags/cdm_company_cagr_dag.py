@@ -16,7 +16,7 @@ def get_dbt_bash_command(env: str) -> Tuple[str, Dict[str, str]]:
     """
     if env == "da909ge4nntude":
         env_vars = {
-            "ENV": Variable.get("ENV2"),
+            "ENV": Variable.get("ENV"),
             "DB_HOST": Variable.get("DB_HOST"),
             "DB_PORT": Variable.get("DB_PORT"),
             "DB_USER": Variable.get("DB_USER"),
@@ -25,7 +25,7 @@ def get_dbt_bash_command(env: str) -> Tuple[str, Dict[str, str]]:
         }
 
         bash_command = (
-            'echo "Airflow ENV2: $ENV2" && '
+            'echo "Airflow ENV: $ENV" && '
             'echo "DB_HOST: $DB_HOST" && '
             'echo "DB_PORT: $DB_PORT" && '
             'echo "DB_USER: $DB_USER" && '
@@ -41,7 +41,7 @@ def get_dbt_bash_command(env: str) -> Tuple[str, Dict[str, str]]:
 
     else:  # Local execution
         env_vars = {
-            "ENV2": Variable.get("ENV2"),
+            "ENV": Variable.get("ENV"),
             "DB_HOST": Variable.get("DB_HOST"),
             "DB_PORT": Variable.get("DB_PORT"),
             "DB_USER": Variable.get("DB_USER"),
@@ -49,8 +49,8 @@ def get_dbt_bash_command(env: str) -> Tuple[str, Dict[str, str]]:
         }
 
         bash_command = (
-            'echo "Airflow ENV2: $ENV2" && '
-            'echo "ENV2: $ENV2" && '
+            'echo "Airflow ENV: $ENV" && '
+            'echo "ENV: $ENV" && '
             'echo "DB_PORT: $DB_PORT" && '
             'echo "DB_NAME: $DB_DATABASE" && '
             'cd /Users/kevin/repos/ELT_private/dbt/src/app && '
@@ -61,7 +61,7 @@ def get_dbt_bash_command(env: str) -> Tuple[str, Dict[str, str]]:
 
 
 # Retrieve environment variables
-env = Variable.get("ENV2", default_var="dev")
+env = Variable.get("ENV", default_var="dev")
 
 # Define default arguments for the DAG
 default_args = {
