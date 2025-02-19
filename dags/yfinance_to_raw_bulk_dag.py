@@ -46,12 +46,21 @@ def get_bash_command(env: str, db_connection_string: str) -> Tuple[str, Dict[str
             f'--start_date "1950-01-01" --end_date "{{{{ ds }}}}"'
         )
     else:
+        # bash_command = (
+        #     'export ENV={{ var.value.ENV }} && '
+        #     'echo "Airflow ENV: $ENV" && '
+        #     '/Users/kevin/.pyenv/shims/python3 /Users/kevin/repos/ELT_private/python/src/dev/raw/yfinance_to_raw_etl.py '
+        #     '--start_date "1950-01-01" --end_date "{{ macros.ds_add(ds, 0) }}"'
+        # )
         bash_command = (
-            'export ENV={{ var.value.ENV }} && '
-            'echo "Airflow ENV: $ENV" && '
-            '/Users/kevin/.pyenv/shims/python3 /Users/kevin/repos/ELT_private/python/src/dev/raw/yfinance_to_raw_etl.py '
-            '--start_date "1950-01-01" --end_date "{{ macros.ds_add(ds, 0) }}"'
+        'source /Users/kevin/repos/ELT_private/airflow_venv/bin/activate && '  # Activate the venv
+        'echo "Using Python: $(which python3)" && '  # Check which Python is being used
+        'export ENV={{ var.value.ENV }} && '
+        'echo "Airflow ENV: $ENV" && '
+        'python3 /Users/kevin/repos/ELT_private/python/src/dev/raw/yfinance_to_raw_etl.py '
+        '--start_date "1950-01-01" --end_date "{{ macros.ds_add(ds, 0) }}"'
         )
+
     
     env_vars = {
         'DATABASE_URL': db_connection_string,
