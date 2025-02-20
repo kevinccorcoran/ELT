@@ -14,7 +14,7 @@ def get_dbt_bash_command(env: str) -> Tuple[str, Dict[str, str]]:
     """
     Generate the Bash command and environment variables dynamically for running dbt.
     """
-    if env == "da909ge4nntude":
+    if env == "heroku_postgres":
         env_vars = {
             "ENV": Variable.get("ENV"),
             "DB_HOST": Variable.get("DB_HOST"),
