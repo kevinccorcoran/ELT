@@ -36,7 +36,7 @@ def get_dbt_bash_command(env: str) -> Tuple[str, Dict[str, str]]:
             f'export DB_DATABASE={Variable.get("DB_DATABASE", default_var="da909ge4nntude")} && '
             "cd /app/dbt/src/app && "
             "/app/.heroku/python/bin/dbt debug --profiles-dir /app/.dbt --project-dir /app/dbt/src/app && "
-            "/app/.heroku/python/bin/dbt run --profiles-dir /app/.dbt --project-dir /app/dbt/src/app --models company_cagr"
+            "/app/.heroku/python/bin/dbt run --profiles-dir /app/.dbt --project-dir /app/dbt/src/app --models company_cagr_metrics"
         )
 
     else:  # Local execution
@@ -54,7 +54,7 @@ def get_dbt_bash_command(env: str) -> Tuple[str, Dict[str, str]]:
             'echo "DB_PORT: $DB_PORT" && '
             'echo "DB_NAME: $DB_DATABASE" && '
             'cd /Users/kevin/repos/ELT_private/dbt/src/app && '
-            '/Users/kevin/.pyenv/shims/dbt run --models company_cagr || true'
+            '/Users/kevin/.pyenv/shims/dbt run --models company_cagr_metrics || true'
         )
 
     return bash_command, env_vars
@@ -74,8 +74,8 @@ default_args = {
 }
 
 with DAG(
-    dag_id="cdm_company_cagr_dag",
-    description="DAG for creating metrics.cagr_metric",
+    dag_id="metrics_cagr_metric_dag",
+    description="DAG for creating metrics.next_n_cagr_ratios",
     default_args=default_args,
     start_date=pendulum.today("UTC").subtract(days=1),
     catchup=False,
@@ -91,33 +91,7 @@ with DAG(
         env=env_vars,
     )
 
-    # Task to trigger metrics_next_n_cagr_ratios_dag
-    trigger_cdm_ticker_count_by_date_dag = TriggerDagRunOperator(
-        task_id='trigger_cdm_ticker_count_by_date_model',
-        trigger_dag_id="cdm_ticker_count_by_date_dag",
-    )
-
-    # Task to trigger downstream DAGs
-    trigger_metrics_ticker_movement_analysis_dag = TriggerDagRunOperator(
-        task_id="trigger_dag_metrics_ticker_movement_analysis_table",
-        trigger_dag_id="metrics_ticker_movement_analysis_dag",
-    )
-
-    trigger_metrics_cagr_metrics_dag = TriggerDagRunOperator(
-        task_id="trigger_dag_metrics_cagr_metrics_model",
-        trigger_dag_id="metrics_cagr_metric_dag",
-    )
-
-    trigger_metrics_next_n_cagr_ratios_dag = TriggerDagRunOperator(
-        task_id="trigger_dag_metrics_next_n_cagr_ratios_model",
-        trigger_dag_id="metric_next_n_cagr_ratios_dag",
-    )
-
     # Define task dependencies
     (
         dbt_run
-        >> trigger_metrics_ticker_movement_analysis_dag
-        >> trigger_cdm_ticker_count_by_date_dag
-        >> trigger_metrics_cagr_metrics_dag
-        >> trigger_metrics_next_n_cagr_ratios_dag
     )

@@ -90,27 +90,9 @@ with DAG(
         bash_command=bash_command,
         env=env_vars,
     )
-    
-    # Task to trigger downstream DAGs
-    trigger_metrics_ticker_movement_analysis_dag = TriggerDagRunOperator(
-        task_id="trigger_dag_metrics_ticker_movement_analysis_table",
-        trigger_dag_id="metrics_ticker_movement_analysis_dag",
-    )
-
-    trigger_metrics_cagr_metrics_dag = TriggerDagRunOperator(
-        task_id="trigger_dag_metrics_cagr_metrics_model",
-        trigger_dag_id="metrics_cagr_metric_dag",
-    )
-
-    trigger_metrics_next_n_cagr_ratios_dag = TriggerDagRunOperator(
-        task_id="trigger_dag_metrics_next_n_cagr_ratios_model",
-        trigger_dag_id="metric_next_n_cagr_ratios_dag",
-    )
 
     # Define task dependencies
     (
         dbt_run
-        >> trigger_metrics_ticker_movement_analysis_dag
-        >> trigger_metrics_cagr_metrics_dag
-        >> trigger_metrics_next_n_cagr_ratios_dag
+     
     )
