@@ -77,7 +77,7 @@ dag = DAG(
     dag_id="yfinance_to_raw_daily",
     default_args=default_args,
     description="Daily run updates raw data",
-    schedule_interval="0,5 0 * * *",  # Runs at 00:00 and 00:05 daily
+    schedule_interval="5 0 * * *",  # Runs at 00:00 and 00:05 daily
     catchup=False,
 )
 
