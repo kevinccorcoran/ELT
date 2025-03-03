@@ -1,5 +1,14 @@
-TICKERS = ['AAPL','MSFT','NET']
+from airflow.models import Variable
 
+# Read environment variable from Airflow
+ENV = Variable.get("ENV", default_var="dev")  # Default to 'dev' if not set
+
+# Define ticker lists
+TICKERS = ['AAPL', 'MSFT', 'NET']
+TICKERS_FULL = ['A', 'AA', 'AACT']
+
+# Select tickers based on the environment
+SELECTED_TICKERS = TICKERS if ENV == "dev" else TICKERS_FULL
 
 # # Full list 
 # TICKERS = ['A', 'AA', 'AACT', 'AACT.U', 'AACT.WS', 'AAM', 'AAM.U', 'AAM.WS', 'AAP', 'AAT', 
