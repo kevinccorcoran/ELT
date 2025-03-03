@@ -8,8 +8,7 @@ TICKERS = ['AAPL', 'MSFT', 'NET']
 TICKERS_FULL = ['A', 'AA', 'AACT']
 
 # Select tickers based on the environment
-#SELECTED_TICKERS = TICKERS if ENV == "dev" else TICKERS_FULL
-SELECTED_TICKERS = TICKERS_FULL if ENV == "staging" else TICKERS_FULL
+SELECTED_TICKERS = TICKERS if ENV == "dev" else TICKERS_FULL
 
 # # Full list 
 # TICKERS = ['A', 'AA', 'AACT', 'AACT.U', 'AACT.WS', 'AAM', 'AAM.U', 'AAM.WS', 'AAP', 'AAT', 
