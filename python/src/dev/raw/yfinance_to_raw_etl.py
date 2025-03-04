@@ -122,7 +122,7 @@ if __name__ == "__main__":
     
     try:
         # Process tickers in batches of specified size
-        batch_size = 100
+        batch_size = 50
         ticker_batches = chunk_list(SELECTED_TICKERS, batch_size)
         
         for batch in ticker_batches:
