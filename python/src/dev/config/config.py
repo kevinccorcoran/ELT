@@ -1,7 +1,7 @@
 from airflow.models import Variable
 
 # Read environment variable from Airflow
-ENV = Variable.get("ENV")  # Default to 'dev' if not set
+ENV = Variable.get("ENV", default_var="staging")  # Default to 'dev' if not set
 
 # Define ticker lists
 TICKERS_SUB = ['AAPL', 'MSFT', 'NET']
