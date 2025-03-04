@@ -85,6 +85,14 @@ def build_df(tickers, start_date=None, end_date=None):
         # Add ticker_date_id by concatenating ticker and date
         df['ticker_date_id'] = df['ticker'].astype(str) + '_' + df['date'].astype(str)
 
+        # Ensure 'Capital Gains' column exists before processing
+        if 'Capital Gains' in df.columns:
+            df['Capital Gains'] = df['Capital Gains'].astype(str).str.replace("\x00", "", regex=False)
+
+        # Apply null byte fix to all string columns
+        for col in df.select_dtypes(include=['object', 'string']).columns:
+            df[col] = df[col].astype(str).str.replace("\x00", "", regex=False)
+
     return df  # Return the constructed DataFrame
 
 if __name__ == "__main__":
@@ -144,6 +152,7 @@ if __name__ == "__main__":
     except Exception as e:
         logging.exception("Unexpected error occurred")
 
+
 # import sys
 # import os
 # import warnings
@@ -154,6 +163,7 @@ if __name__ == "__main__":
 # import yfinance as yf
 # import pandas as pd
 # import adbc_driver_postgresql.dbapi as pg_dbapi
+# from airflow.models import Variable  # Import Airflow Variable
 
 # # Suppress FutureWarnings from libraries
 # warnings.filterwarnings("ignore", category=FutureWarning)
@@ -162,7 +172,7 @@ if __name__ == "__main__":
 # sys.path.append('/Users/kevin/repos/ELT_private/python/src/')
 
 # # Import configurations and helper functions
-# from dev.config.config import TICKERS
+# from dev.config.config import TICKERS, TICKERS_FULL
 # from dev.config.helpers import save_to_database
 
 # # Configure logging
@@ -233,6 +243,12 @@ if __name__ == "__main__":
 #     return df  # Return the constructed DataFrame
 
 # if __name__ == "__main__":
+#     # Retrieve environment variable from Airflow
+#     ENV = Variable.get("ENV", default_var="dev")
+
+#     # Select tickers based on environment
+#     SELECTED_TICKERS = TICKERS if ENV == "dev" else TICKERS_FULL
+
 #     # Argument parser for optional start_date and end_date
 #     parser = argparse.ArgumentParser(description="Fetch stock data.")
 #     parser.add_argument("--start_date", help="Start date for data fetch (format YYYY-MM-DD)", required=False)
@@ -261,8 +277,8 @@ if __name__ == "__main__":
     
 #     try:
 #         # Process tickers in batches of specified size
-#         batch_size = 100
-#         ticker_batches = chunk_list(TICKERS, batch_size)
+#         batch_size = 50
+#         ticker_batches = chunk_list(SELECTED_TICKERS, batch_size)
         
 #         for batch in ticker_batches:
 #             # Fetch data for the current batch
