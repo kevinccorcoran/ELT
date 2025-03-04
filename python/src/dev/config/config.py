@@ -8,7 +8,8 @@ TICKERS = ['AAPL', 'MSFT', 'NET']
 TICKERS_FULL = ['A', 'AA', 'AACT']
 
 # Select tickers based on the environment
-SELECTED_TICKERS = TICKERS_FULL if ENV == "staging" else TICKERS
+SELECTED_TICKERS = TICKERS_FULL if ENV in ["staging", "heroku_postgres"] else TICKERS
+
 
 # # Full list 
 # TICKERS = ['A', 'AA', 'AACT', 'AACT.U', 'AACT.WS', 'AAM', 'AAM.U', 'AAM.WS', 'AAP', 'AAT', 
