@@ -4,11 +4,11 @@ from airflow.models import Variable
 ENV = Variable.get("ENV", default_var="dev")  # Default to 'dev' if not set
 
 # Define ticker lists
-TICKERS = ['AAPL', 'MSFT', 'NET']
+TICKERS_SUB = ['AAPL', 'MSFT', 'NET']
 TICKERS_FULL = ['A', 'AA', 'AACT']
 
 # Select tickers based on the environment
-SELECTED_TICKERS = TICKERS_FULL if ENV in ["staging", "heroku_postgres"] else TICKERS
+TICKERS = TICKERS_FULL if ENV in ["staging", "heroku_postgres"] else TICKERS_SUB
 
 
 # # Full list 
