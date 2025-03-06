@@ -77,7 +77,8 @@ def build_df(tickers, start_date=None, end_date=None):
         df.rename(columns={'Date': 'date'}, inplace=True)
         
         # Format the date column to exclude time and timezone
-        df['date'] = pd.to_datetime(df['date']).dt.date
+        #df['date'] = pd.to_datetime(df['date']).dt.date
+        df['date'] = pd.to_datetime(df['date']).dt.strftime('%Y-%m-%d')
 
         # Convert 'date' column to string to avoid PostgreSQL COPY format issues
         df['date'] = df['date'].astype(str)
