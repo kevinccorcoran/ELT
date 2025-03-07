@@ -39,8 +39,11 @@ def build_df(tickers, start_date=None, end_date=None):
             # Fetch stock data using yfinance
             stock_data = yf.Ticker(ticker)
             
-            # Fetch historical data within the date range if provided; otherwise, fetch max period
-            dx = stock_data.history(start=start_date, end=end_date) if start_date and end_date else stock_data.history(period="max")
+            # Fetch historical data within the date range if provided; 
+            # otherwise, fetch max period
+            dx = (stock_data.history(start=start_date, end=end_date) 
+                  if start_date and end_date 
+                  else stock_data.history(period="max"))
             
             # Check if data is empty (ticker might be delisted or inactive)
             if dx.empty:
@@ -76,36 +79,31 @@ def build_df(tickers, start_date=None, end_date=None):
         df.reset_index(inplace=True)
         df.rename(columns={'Date': 'date'}, inplace=True)
         
-        # Format the date column to exclude time and timezone
-        #df['date'] = pd.to_datetime(df['date']).dt.date
-        # df['date'] = pd.to_datetime(df['date']).dt.strftime('%Y-%m-%d')
-
-        # # Convert 'date' column to string to avoid PostgreSQL COPY format issues
-        # df['date'] = df['date'].astype(str)
-
-        #df['date'] = pd.to_datetime(df['date']).dt.date  # yields Python `datetime.date` objects
-        # Ensure date column is correctly formatted before inserting into the database
+        # ------------------------------------------------------------------------------
+        # 1) Convert 'date' to a proper date (no timezone).
+        # 2) Drop rows that have missing/NaT in 'date'.
         df['date'] = pd.to_datetime(df['date']).dt.tz_localize(None).dt.date
         df = df.dropna(subset=["date"])
-
-        # Convert date to string format to avoid binary COPY issues
-        df["date"] = df["date"].astype(str)  # Ensures 'YYYY-MM-DD' format
+        # ------------------------------------------------------------------------------
 
         # Add the processed_at column with the current timestamp
         df['processed_at'] = datetime.now()
 
         # Add ticker_date_id by concatenating ticker and date
+        #  - Notice we still convert date to string here for the ID, which is fine:
         df['ticker_date_id'] = df['ticker'].astype(str) + '_' + df['date'].astype(str)
 
         # Ensure 'Capital Gains' column exists before processing
         if 'Capital Gains' in df.columns:
             df['Capital Gains'] = df['Capital Gains'].astype(str).str.replace("\x00", "", regex=False)
 
-        # Apply null byte fix to all string columns
+        # Remove null bytes in other string columns if necessary
         for col in df.select_dtypes(include=['object', 'string']).columns:
-            df[col] = df[col].astype(str).str.replace("\x00", "", regex=False)
+            if col != 'date':  # Skip 'date' because it's no longer an object/string
+                df[col] = df[col].astype(str).str.replace("\x00", "", regex=False)
 
     return df  # Return the constructed DataFrame
+
 
 if __name__ == "__main__":
     # Retrieve environment variable from Airflow
