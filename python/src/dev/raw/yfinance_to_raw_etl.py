@@ -83,9 +83,7 @@ def build_df(tickers, start_date=None, end_date=None):
         # # Convert 'date' column to string to avoid PostgreSQL COPY format issues
         # df['date'] = df['date'].astype(str)
 
-        #df['date'] = pd.to_datetime(df['date']).dt.date  # Ensures values are proper date objects
-        df['date'] = pd.to_datetime(df['date']).dt.date.astype(str)  # Convert to string representation of date
-
+        df['date'] = pd.to_datetime(df['date']).dt.date  # yields Python `datetime.date` objects
 
         # Add the processed_at column with the current timestamp
         df['processed_at'] = datetime.now()
