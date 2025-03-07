@@ -55,11 +55,15 @@ import pandas as pd
 def save_to_database(df, table_name, connection_string, schema_name, key_columns=None):
     """Saves the DataFrame to the specified table in the given schema of the database."""
     try:
+        # Ensure the connection string is compatible with SQLAlchemy
+        if connection_string.startswith("postgres://"):
+            connection_string = connection_string.replace("postgres://", "postgresql+psycopg2://", 1)
+
         # Create a SQLAlchemy engine
         engine = create_engine(connection_string)
 
         with engine.connect() as conn:
-            conn.execution_options(isolation_level="AUTOCOMMIT")  # Optional: ensures immediate write
+            conn.execution_options(isolation_level="AUTOCOMMIT")  # Ensure transactions are committed
             
             # Set schema explicitly
             df_to_insert = df.copy()  # Avoid modifying the original DataFrame
@@ -92,7 +96,7 @@ def save_to_database(df, table_name, connection_string, schema_name, key_columns
 
     except Exception as e:
         print("Failed to save data to database:", e)
-        return None
+
 
 
 def fetch_data_from_database(schema_name, table_name, connection_string):
