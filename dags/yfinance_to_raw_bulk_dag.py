@@ -90,12 +90,16 @@ dag = DAG(
 
 # Get the Bash command and environment variables
 bash_command, env_vars = get_bash_command(env, db_connection_string)
+import os
+merged_env = os.environ.copy()  # includes AIRFLOW__CORE__SQL_ALCHEMY_CONN
+merged_env["DATABASE_URL"] = db_connection_string
+merged_env["ENV"] = env
 
 # Task to run the yfinance_to_raw_etl.py Python script
 fetch_yfinance_data = BashOperator(
     task_id='fetch_yfinance_data',
     bash_command=bash_command,
-    env=env_vars,
+    env=merged_env,
     dag=dag,
 )
 
