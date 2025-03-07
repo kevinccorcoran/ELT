@@ -78,10 +78,13 @@ def build_df(tickers, start_date=None, end_date=None):
         
         # Format the date column to exclude time and timezone
         #df['date'] = pd.to_datetime(df['date']).dt.date
-        df['date'] = pd.to_datetime(df['date']).dt.strftime('%Y-%m-%d')
+        # df['date'] = pd.to_datetime(df['date']).dt.strftime('%Y-%m-%d')
 
-        # Convert 'date' column to string to avoid PostgreSQL COPY format issues
-        df['date'] = df['date'].astype(str)
+        # # Convert 'date' column to string to avoid PostgreSQL COPY format issues
+        # df['date'] = df['date'].astype(str)
+
+        df['date'] = pd.to_datetime(df['date']).dt.date  # Ensures values are proper date objects
+
 
         # Add the processed_at column with the current timestamp
         df['processed_at'] = datetime.now()
