@@ -84,7 +84,9 @@ def build_df(tickers, start_date=None, end_date=None):
         # df['date'] = df['date'].astype(str)
 
         #df['date'] = pd.to_datetime(df['date']).dt.date  # yields Python `datetime.date` objects
-        
+        # Ensure date column is correctly formatted before inserting into the database
+        df['date'] = pd.to_datetime(df['date']).dt.tz_localize(None).dt.date
+        df = df.dropna(subset=["date"])
         # Add the processed_at column with the current timestamp
         df['processed_at'] = datetime.now()
 
