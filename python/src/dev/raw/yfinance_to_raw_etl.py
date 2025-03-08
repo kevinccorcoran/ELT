@@ -135,7 +135,7 @@ if __name__ == "__main__":
     
     try:
         # Process tickers in batches of specified size
-        batch_size = 5  # Reduce batch size to avoid API rate limits
+        batch_size = 50  # Reduce batch size to avoid API rate limits
         ticker_batches = chunk_list(SELECTED_TICKERS, batch_size)
         
         for batch in ticker_batches:
