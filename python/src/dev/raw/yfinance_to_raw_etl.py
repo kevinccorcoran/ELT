@@ -30,13 +30,10 @@ def chunk_list(lst, n):
         yield lst[i:i + n]
 
 def fetch_stock_data(ticker, start_date=None, end_date=None, retries=3):
-    """
-    Fetches historical stock data for a given ticker with retry logic for rate limits.
-    """
     attempt = 0
     while attempt < retries:
         try:
-            time.sleep(2)  # Delay to prevent rate limiting
+            time.sleep(5)  # Increase delay to 5 seconds
             stock_data = yf.Ticker(ticker)
             dx = stock_data.history(start=start_date, end=end_date) if start_date and end_date else stock_data.history(period="max")
 
@@ -48,11 +45,12 @@ def fetch_stock_data(ticker, start_date=None, end_date=None, retries=3):
         
         except Exception as e:
             logging.warning(f"Error fetching data for {ticker}: {e}. Retrying ({attempt + 1}/{retries})...")
-            time.sleep(2 ** attempt)  # Exponential backoff
+            time.sleep(5 * (attempt + 1))  # Exponential backoff (5s, 10s, 15s)
             attempt += 1
 
     logging.error(f"Failed to fetch data for {ticker} after {retries} attempts.")
-    return None  # Return None if all retries fail
+    return None
+
 
 def build_df(tickers, start_date=None, end_date=None):
     """
@@ -137,7 +135,7 @@ if __name__ == "__main__":
     
     try:
         # Process tickers in batches of specified size
-        batch_size = 10  # Reduce batch size to avoid API rate limits
+        batch_size = 5  # Reduce batch size to avoid API rate limits
         ticker_batches = chunk_list(SELECTED_TICKERS, batch_size)
         
         for batch in ticker_batches:
