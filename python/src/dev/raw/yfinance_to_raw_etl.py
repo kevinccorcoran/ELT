@@ -33,7 +33,7 @@ def fetch_stock_data(ticker, start_date=None, end_date=None, retries=3):
     attempt = 0
     while attempt < retries:
         try:
-            time.sleep(5)  # Increase delay to 5 seconds
+            #time.sleep(5)  # Increase delay to 5 seconds
             stock_data = yf.Ticker(ticker)
             dx = stock_data.history(start=start_date, end=end_date) if start_date and end_date else stock_data.history(period="max")
 
@@ -45,8 +45,8 @@ def fetch_stock_data(ticker, start_date=None, end_date=None, retries=3):
         
         except Exception as e:
             logging.warning(f"Error fetching data for {ticker}: {e}. Retrying ({attempt + 1}/{retries})...")
-            time.sleep(5 * (attempt + 1))  # Exponential backoff (5s, 10s, 15s)
-            attempt += 1
+            #time.sleep(5 * (attempt + 1))  # Exponential backoff (5s, 10s, 15s)
+            #attempt += 1
 
     logging.error(f"Failed to fetch data for {ticker} after {retries} attempts.")
     return None
@@ -135,7 +135,7 @@ if __name__ == "__main__":
     
     try:
         # Process tickers in batches of specified size
-        batch_size = 50  # Reduce batch size to avoid API rate limits
+        batch_size = 100  # Reduce batch size to avoid API rate limits
         ticker_batches = chunk_list(SELECTED_TICKERS, batch_size)
         
         for batch in ticker_batches:
