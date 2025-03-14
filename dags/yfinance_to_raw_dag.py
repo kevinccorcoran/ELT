@@ -54,12 +54,20 @@ def get_bash_command(env: str, db_connection_string: str) -> Tuple[str, Dict[str
         #     '/Users/kevin/.pyenv/shims/python3 /Users/kevin/repos/ELT_private/python/src/dev/raw/yfinance_to_raw_etl.py '
         #     '--start_date "{{ macros.ds_add(ds, -1) }}" --end_date "{{ ds }}"'
         # )
+        # bash_command = (
+        #     'export ENV={{ var.value.ENV }} && '
+        #     'echo "Airflow ENV: $ENV" && '
+        #     '/Users/kevin/.pyenv/shims/python3 /Users/kevin/repos/ELT_private/python/src/dev/raw/yfinance_to_raw_etl.py '
+        #     '--start_date "{{ macros.ds_add(ds, -1) }}" --end_date "{{ ds }}"'
+        # )
         bash_command = (
             'export ENV={{ var.value.ENV }} && '
             'echo "Airflow ENV: $ENV" && '
-            '/Users/kevin/.pyenv/shims/python3 /Users/kevin/repos/ELT_private/python/src/dev/raw/yfinance_to_raw_etl.py '
-            '--start_date "{{ macros.ds_add(ds, -1) }}" --end_date "{{ ds }}"'
+            '/Users/kevin/repos/ELT_private/airflow_venv/bin/python '  # Use the correct Python
+            '/Users/kevin/repos/ELT_private/python/src/dev/raw/yfinance_to_raw_etl.py '
+            '--start_date "{{ macros.ds_add(ds, -10) }}" --end_date "{{ ds }}"'
         )
+
 
     
     env_vars = {
