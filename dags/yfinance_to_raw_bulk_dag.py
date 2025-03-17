@@ -1,17 +1,16 @@
 # Standard library imports
 from datetime import datetime, timedelta
+import os
+import logging
 
 # Airflow-specific imports
 from airflow import DAG
 from airflow.models import Variable
 from airflow.operators.bash import BashOperator
 from airflow.operators.trigger_dagrun import TriggerDagRunOperator
-
-# Import Tuple and Dict for Python <3.9 compatibility
 from typing import Tuple, Dict
 
 # Configure logging
-import logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 
@@ -43,18 +42,17 @@ def get_bash_command(env: str, db_connection_string: str) -> Tuple[str, Dict[str
         bash_command = (
             f'export PYTHONPATH=$PYTHONPATH:/app/python/src && '
             f'/app/.heroku/python/bin/python3 /app/python/src/dev/raw/yfinance_to_raw_etl.py '
-            f'--start_date "1950-01-01" --end_date "{{{{ ds }}}}"'
+            f'--start_date "1950-01-01" --end_date "$(date -I)"'
         )
     else:
         bash_command = (
-        'source /Users/kevin/repos/ELT_private/airflow_venv/bin/activate && '  # Activate the venv
-        'echo "Using Python: $(which python3)" && '  # Check which Python is being used
-        'export ENV={{ var.value.ENV }} && '
+        'source /Users/kevin/repos/ELT_private/airflow_venv/bin/activate && '  
+        'echo "Using Python: $(which python3)" && '  
+        f'export ENV={env} && '  
         'echo "Airflow ENV: $ENV" && '
         'python3 /Users/kevin/repos/ELT_private/python/src/dev/raw/yfinance_to_raw_etl.py '
-        '--start_date "1950-01-01" --end_date "{{ macros.ds_add(ds, 0) }}"'
+        '--start_date "1950-01-01" --end_date "$(date -I)"'
         )
-
     
     env_vars = {
         'DATABASE_URL': db_connection_string,
@@ -90,17 +88,14 @@ dag = DAG(
 
 # Get the Bash command and environment variables
 bash_command, env_vars = get_bash_command(env, db_connection_string)
-import os
-merged_env = os.environ.copy()  # includes AIRFLOW__CORE__SQL_ALCHEMY_CONN
-merged_env["DATABASE_URL"] = db_connection_string
-merged_env["ENV"] = env
 
 # Task to run the yfinance_to_raw_etl.py Python script
 fetch_yfinance_data = BashOperator(
     task_id='fetch_yfinance_data',
     bash_command=bash_command,
-    env=merged_env,
-    dag=dag,
+    env=env_vars,  # Pass only required variables
+    dag=dag
+    #provide_context=False  # Prevent Jinja rendering
 )
 
 # Task to trigger the next DAG
