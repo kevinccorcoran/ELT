@@ -77,11 +77,11 @@ try:
             "close": pl.Float64,
             "volume": pl.Int64,
             "dividends": pl.Float64,
-            "Stock Splits": pl.Float64,
+            "stock_splits": pl.Float64,
             "ticker": pl.Utf8,
             "processed_at": pl.Datetime,
             "adj_close": pl.Float64,
-            "Capital Gains": pl.Utf8,
+            "capital_gains": pl.Utf8,
             "ticker_date_id": pl.Utf8,
         }
 
@@ -113,8 +113,8 @@ try:
         )
         full_pl_df = full_pl_df.select([
             "date", "ticker", "open", "high", "low", "close", "volume",
-            "dividends", "Stock Splits", "processed_at", "adj_close",
-            "Capital Gains", "date_type", "ticker_date_id"
+            "dividends", "stock_splits", "processed_at", "adj_close",
+            "capital_gains", "date_type", "ticker_date_id"
         ])
 
         # Ensure distinct rows
@@ -139,8 +139,8 @@ try:
                 cursor.copy_expert(
                     f"""COPY {target_schema}.{target_table} (
                         "date", ticker, "open", high, low, "close", volume,
-                        dividends, "Stock Splits", processed_at, adj_close,
-                        "Capital Gains", date_type, ticker_date_id
+                        dividends, "stock_splits", processed_at, adj_close,
+                        "capital_gains", date_type, ticker_date_id
                     ) FROM STDIN WITH (FORMAT CSV, HEADER TRUE)""",
                     csv_buffer
                 )
