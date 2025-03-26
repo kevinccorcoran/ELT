@@ -33,18 +33,18 @@ default_args = {
 
 # Define the DAG
 dag = DAG(
-    dag_id="raw_to_api_cdm_data_ingestion_dag",
+    dag_id="raw_to_api_data_ingestion_dag",
     default_args=default_args,
-    description="DAG to run a Python script that updates cdm.raw_to_api_cdm_data_ingestion",
+    description="DAG to run a Python script that updates cdm.raw_to_api_data_ingestion",
     schedule_interval=None,  # Run only when manually triggered
     catchup=False,  # Ensures it does not backfill from start_date to now
 )
 
 # Task to run the yfinance_to_raw_etl.py Python script, passing environment-specific DB connection
-insert_api_cdm_data_ingestion = BashOperator(
-    task_id='insert_api_cdm_data_ingestion',
+insert_api_data_ingestion = BashOperator(
+    task_id='insert_api_data_ingestion',
     bash_command=(
-        '/Users/kevin/.pyenv/shims/python3 /Users/kevin/Dropbox/applications/ELT/python/src/dev/cdm/api_cdm_data_ingestion.py '
+        '/Users/kevin/.pyenv/shims/python3 /Users/kevin/Dropbox/applications/ELT/python/src/dev/cdm/api_data_ingestion.py '
     ),
     env={
         'DB_CONNECTION_STRING': db_connection_string,
@@ -61,4 +61,4 @@ trigger_raw_to_lookup_dag = TriggerDagRunOperator(
 )
 
 # Set task dependencies
-insert_api_cdm_data_ingestion >> trigger_raw_to_lookup_dag
+insert_api_data_ingestion >> trigger_raw_to_lookup_dag

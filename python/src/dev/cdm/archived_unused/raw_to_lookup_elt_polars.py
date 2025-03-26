@@ -32,7 +32,7 @@ def fetch_data(schema_name, table_name, connection_string):
     return pl.DataFrame(data)
 
 # Load data from PostgreSQL
-df = fetch_data("raw", "api_raw_data_ingestion", db_connection_string)
+df = fetch_data("raw", "api_data_ingestion", db_connection_string)
 
 # Load existing records to avoid duplicates
 existing_df = fetch_data("cdm", "date_lookup", db_connection_string).select(["ticker", "date"])

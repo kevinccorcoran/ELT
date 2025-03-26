@@ -40,9 +40,9 @@ default_args = {
 
 # Define the DAG
 dag = DAG(
-    dag_id="raw_to_api_cdm_data_ingestion_dag",
+    dag_id="raw_to_api_data_ingestion_dag",
     default_args=default_args,
-    description="DAG to run a Python script that updates cdm.raw_to_api_cdm_data_ingestion",
+    description="DAG to run a Python script that updates cdm.raw_to_api_data_ingestion",
     schedule_interval=None,  # Manual trigger only
     catchup=False,
 )
@@ -58,7 +58,7 @@ log_env = PythonOperator(
 if env == "heroku_postgres":
     bash_command = (
         f'export PYTHONPATH=$PYTHONPATH:/app/python/src && '
-        f'/app/.heroku/python/bin/python3 /app/python/src/dev/cdm/api_cdm_data_ingestion.py '
+        f'/app/.heroku/python/bin/python3 /app/python/src/dev/cdm/api_data_ingestion.py '
     )
     env_vars = {
         'DATABASE_URL': db_connection_string,
@@ -68,7 +68,7 @@ else:
     bash_command = (
         'export ENV={{ var.value.ENV }} && '
         'echo "Airflow ENV: $ENV" && '
-        '/Users/kevin/.pyenv/shims/python3 /Users/kevin/repos/ELT_private/python/src/dev/cdm/api_cdm_data_ingestion.py '
+        '/Users/kevin/.pyenv/shims/python3 /Users/kevin/repos/ELT_private/python/src/dev/cdm/api_data_ingestion.py '
     )
     env_vars = {
         'DATABASE_URL': db_connection_string,
@@ -76,8 +76,8 @@ else:
     }
 
 # Task to run the Python script
-insert_api_cdm_data_ingestion = BashOperator(
-    task_id='insert_api_cdm_data_ingestion',
+insert_api_data_ingestion = BashOperator(
+    task_id='insert_api_data_ingestion',
     bash_command=bash_command,
     env=env_vars,  # Pass the environment variables to the task
     dag=dag,
@@ -91,7 +91,7 @@ trigger_raw_to_lookup_dag = TriggerDagRunOperator(
 )
 
 # Set task dependencies
-log_env >> insert_api_cdm_data_ingestion >> trigger_raw_to_lookup_dag
+log_env >> insert_api_data_ingestion >> trigger_raw_to_lookup_dag
 
 # from datetime import datetime, timedelta
 # from airflow import DAG
@@ -135,9 +135,9 @@ log_env >> insert_api_cdm_data_ingestion >> trigger_raw_to_lookup_dag
 
 # # Define the DAG
 # dag = DAG(
-#     dag_id="raw_to_api_cdm_data_ingestion_dag",
+#     dag_id="raw_to_api_data_ingestion_dag",
 #     default_args=default_args,
-#     description="DAG to run a Python script that updates cdm.raw_to_api_cdm_data_ingestion",
+#     description="DAG to run a Python script that updates cdm.raw_to_api_data_ingestion",
 #     schedule_interval=None,  # Run only when manually triggered
 #     catchup=False,  # Ensures it does not backfill from start_date to now
 # )
@@ -146,7 +146,7 @@ log_env >> insert_api_cdm_data_ingestion >> trigger_raw_to_lookup_dag
 # if env == "heroku_postgres":
 #     bash_command = (
 #         f'export PYTHONPATH=$PYTHONPATH:/app/python/src && '
-#         f'/app/.heroku/python/bin/python3 /app/python/src/dev/cdm/api_cdm_data_ingestion.py '
+#         f'/app/.heroku/python/bin/python3 /app/python/src/dev/cdm/api_data_ingestion.py '
 #     )
 #     env_vars = {
 #         'DATABASE_URL': db_connection_string,
@@ -156,7 +156,7 @@ log_env >> insert_api_cdm_data_ingestion >> trigger_raw_to_lookup_dag
 #     bash_command = (
 #         'export ENV={{ var.value.ENV }} && '
 #         'echo "Airflow ENV: $ENV" && '
-#         '/Users/kevin/.pyenv/shims/python3 /Users/kevin/repos/ELT_private/python/src/dev/cdm/api_cdm_data_ingestion.py '
+#         '/Users/kevin/.pyenv/shims/python3 /Users/kevin/repos/ELT_private/python/src/dev/cdm/api_data_ingestion.py '
 #     )
 #     env_vars = {
 #         'DATABASE_URL': db_connection_string,
@@ -164,8 +164,8 @@ log_env >> insert_api_cdm_data_ingestion >> trigger_raw_to_lookup_dag
 #     }
 
 # # Task to run the yfinance_to_raw_etl.py Python script, passing environment-specific DB connection
-# insert_api_cdm_data_ingestion = BashOperator(
-#     task_id='insert_api_cdm_data_ingestion',
+# insert_api_data_ingestion = BashOperator(
+#     task_id='insert_api_data_ingestion',
 #     bash_command=bash_command,
 #     dag=dag,
 # )
@@ -178,4 +178,4 @@ log_env >> insert_api_cdm_data_ingestion >> trigger_raw_to_lookup_dag
 # )
 
 # # Set task dependencies
-# insert_api_cdm_data_ingestion >> trigger_raw_to_lookup_dag
+# insert_api_data_ingestion >> trigger_raw_to_lookup_dag
