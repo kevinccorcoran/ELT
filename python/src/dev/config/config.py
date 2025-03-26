@@ -4,7 +4,7 @@ from airflow.models import Variable
 ENV = Variable.get("ENV", default_var="staging")  # Default to 'dev' if not set
 
 # Define ticker lists
-TICKERS_SUB = ['AAPL', 'MSFT', 'NET','ACWI']
+TICKERS_SUB = ['MSFT','^GSPC','DIS','AMZN']
 TICKERS_FULL = ['A', 'AA', 'AACT']
 
 # # Full list 

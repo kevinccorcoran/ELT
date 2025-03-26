@@ -90,7 +90,7 @@ if __name__ == "__main__":
     parser.add_argument("--end_date", help="End date for data fetch (format YYYY-MM-DD)", required=False)
     args = parser.parse_args()
 
-    table_name = 'api_raw_data_ingestion_2'  # Name of the table to create or replace
+    table_name = 'api_data_ingestion_2'  # Name of the table to create or replace
     key_columns = ['ticker', 'date']  # Key columns to check for duplicates
 
     # Retrieve connection string from environment variables
@@ -188,7 +188,7 @@ if __name__ == "__main__":
 #         raise
 
 # if __name__ == "__main__":
-#     table_name = 'api_raw_data_ingestion'  # Name of the table to create or replace
+#     table_name = 'api_data_ingestion'  # Name of the table to create or replace
 #     key_columns = ['ticker', 'date']  # Key columns to check for duplicates
 
 #     # Retrieve connection string from environment variables

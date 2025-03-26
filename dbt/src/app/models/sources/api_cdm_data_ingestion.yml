@@ -5,4 +5,4 @@ sources:
     database: "{{ env_var('ENV') }}"
     schema: cdm
     tables:
-      - name: api_cdm_data_ingestion
+      - name: api_data_ingestion

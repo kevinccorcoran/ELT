@@ -124,7 +124,7 @@ if __name__ == "__main__":
     start_date = args.start_date or today
     end_date = args.end_date or today
 
-    table_name = 'api_raw_data_ingestion'
+    table_name = 'api_data_ingestion'
     key_columns = ['ticker_date_id']
 
     connection_string = os.getenv('DATABASE_URL')

@@ -99,11 +99,11 @@ fetch_yfinance_data = BashOperator(
 )
 
 # Task to trigger the next DAG
-trigger_api_cdm_data_ingestion = TriggerDagRunOperator(
-    task_id='trigger_dag_for_cdm_api_cdm_data_ingestion_table',
-    trigger_dag_id="raw_to_api_cdm_data_ingestion_dag",
+trigger_api_data_ingestion = TriggerDagRunOperator(
+    task_id='trigger_dag_for_cdm_api_data_ingestion_table',
+    trigger_dag_id="raw_to_api_data_ingestion_dag",
     dag=dag,
 )
 
 # Set task dependencies
-fetch_yfinance_data >> trigger_api_cdm_data_ingestion
+fetch_yfinance_data >> trigger_api_data_ingestion

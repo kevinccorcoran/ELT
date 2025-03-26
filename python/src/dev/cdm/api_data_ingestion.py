@@ -58,9 +58,9 @@ try:
     # Connect to the database
     with psycopg2.connect(connection_string) as conn:
         schema_name = 'raw'
-        table_name = 'api_raw_data_ingestion'
+        table_name = 'api_data_ingestion'
         target_schema = 'cdm'
-        target_table = 'api_cdm_data_ingestion'
+        target_table = 'api_data_ingestion'
 
         query = f"SELECT * FROM {schema_name}.{table_name}"
         with conn.cursor() as cursor:
