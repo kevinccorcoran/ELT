@@ -79,7 +79,7 @@ default_args = {
 
 # Define the DAG
 dag = DAG(
-    dag_id="yfinance_to_raw_bulk_dag",
+    dag_id="raw_api_data_ingestion_bulk",
     default_args=default_args,
     description="Bulk updates raw data",
     schedule_interval=None,
@@ -99,11 +99,11 @@ fetch_yfinance_data = BashOperator(
 )
 
 # Task to trigger the next DAG
-trigger_api_data_ingestion = TriggerDagRunOperator(
+trigger_cdm_api_data_ingestion = TriggerDagRunOperator(
     task_id='trigger_dag_for_cdm_api_data_ingestion_table',
-    trigger_dag_id="raw_to_api_data_ingestion_dag",
+    trigger_dag_id="cdm_api_data_ingestion",
     dag=dag,
 )
 
 # Set task dependencies
-fetch_yfinance_data >> trigger_api_data_ingestion
+fetch_yfinance_data >> trigger_cdm_api_data_ingestion

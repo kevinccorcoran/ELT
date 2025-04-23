@@ -42,14 +42,14 @@ def get_bash_command(env: str, db_connection_string: str) -> Tuple[str, Dict[str
     if env == "heroku_postgres":
         bash_command = (
             f'export PYTHONPATH=$PYTHONPATH:/app/python/src && '
-            f'/app/.heroku/python/bin/python3 /app/python/src/dev/cdm/api_data_ingestion.py '
+            f'/app/.heroku/python/bin/python3 /app/python/src/dev/cdm/lookup_dividend_start.py '
             f'--start_date "1950-01-01" --end_date "{{{{ ds }}}}"'
         )
     else:
         bash_command = (
             'export ENV={{ var.value.ENV }} && '
             'echo "Airflow ENV: $ENV" && '
-            '/Users/kevin/.pyenv/shims/python3 /Users/kevin/repos/ELT_private/python/src/dev/cdm/api_data_ingestion.py '
+            '/Users/kevin/.pyenv/shims/python3 /Users/kevin/repos/ELT_private/python/src/dev/cdm/lookup_dividend_start.py '
             '--start_date "1950-01-01" --end_date "{{ macros.ds_add(ds, 0) }}"'
         )
     
@@ -78,9 +78,9 @@ default_args = {
 
 # Define the DAG
 dag = DAG(
-    dag_id="raw_to_api_data_ingestion_dag",
+    dag_id="cdm_lookup_dividend_start",
     default_args=default_args,
-    description="DAG to run a Python script that updates cdm.raw_to_api_data_ingestion",
+    description="DAG to run a Python script that updates cdm_lookup_dividend_start",
     schedule_interval=None,  # Manual trigger only
     catchup=False,
 )
@@ -89,26 +89,13 @@ dag = DAG(
 bash_command, env_vars = get_bash_command(env, db_connection_string)
 
 # Task to run the Python script
-insert_api_data_ingestion = BashOperator(
-    task_id='insert_api_data_ingestion',
+create_cdm_lookup_dividend_start = BashOperator(
+    task_id='cdm_lookup_dividend_start',
     bash_command=bash_command,
     env=env_vars,  # Pass the environment variables to the task
     dag=dag,
 )
 
-# Task to trigger the next DAG for creating the lookup table
-trigger_raw_to_lookup_dag = TriggerDagRunOperator(
-    task_id='trigger_dag_for_cdm_fibonacci_transform_dates_lookup_table',
-    trigger_dag_id="raw_to_lookup_dag",  # ID of the DAG to trigger
-    dag=dag,
-)
-
-# Task to trigger the next DAG for creating the lookup table
-trigger_cdm_quarter_lookup_dag = TriggerDagRunOperator(
-    task_id='trigger_dag_for_cdm_quarter_lookup_table',
-    trigger_dag_id="cdm_quarter_lookup_dag",  # ID of the DAG to trigger
-    dag=dag,
-)
 
 # Set task dependencies
-insert_api_data_ingestion >> trigger_raw_to_lookup_dag >> trigger_cdm_quarter_lookup_dag
+create_cdm_lookup_dividend_start 

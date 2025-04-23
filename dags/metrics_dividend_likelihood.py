@@ -80,7 +80,7 @@ default_args = {
 }
 
 with DAG(
-    dag_id="metrics_dividend_likelihood_dag",
+    dag_id="metrics_dividend_likelihood",
     description="DAG for creating metrics.dividend_likelihood",
     default_args=default_args,
     start_date=pendulum.today("UTC").subtract(days=1),

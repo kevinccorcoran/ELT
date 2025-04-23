@@ -89,7 +89,6 @@ try:
         cleaned_data = [clean_row(row, colnames) for row in data]
         pl_df = pl.DataFrame(cleaned_data, schema=schema)
 
-        # Debug logs
         logging.info("Sample cleaned data: %s", cleaned_data[:5])
         logging.info("Column names: %s", colnames)
         logging.info("Initial DataFrame Schema: %s", pl_df.schema)
@@ -120,13 +119,23 @@ try:
         # Ensure distinct rows
         full_pl_df = full_pl_df.unique(subset=["ticker_date_id"])
 
-        # Debug transformed DataFrame
         logging.info("Transformed DataFrame Schema: %s", full_pl_df.schema)
         logging.info("Sample Rows After Transformation: %s", full_pl_df.head())
 
-        # Insert into the target PostgreSQL table in batches
+        # Step: Remove already existing ticker_date_ids
+        with conn.cursor() as cursor:
+            cursor.execute(f'SELECT ticker_date_id FROM {target_schema}.{target_table}')
+            existing_ids = {row[0] for row in cursor.fetchall()}
+
+        logging.info("Fetched %d existing ticker_date_ids from target table.", len(existing_ids))
+
+        full_pl_df = full_pl_df.filter(~pl.col("ticker_date_id").is_in(existing_ids))
+        logging.info("Filtered down to %d new rows to insert.", full_pl_df.shape[0])
+
+        # Insert new rows in batches
         batch_size = 10000
         num_rows = full_pl_df.shape[0]
+
         for start in range(0, num_rows, batch_size):
             end = min(start + batch_size, num_rows)
             batch = full_pl_df[start:end]

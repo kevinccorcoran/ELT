@@ -81,7 +81,7 @@ try:
         schema_name = 'raw'
         table_name = 'api_data_ingestion'
         target_schema = 'cdm'
-        target_table = 'date_lookup'
+        target_table = 'lookup_since_ipo'
 
         query = f"SELECT * FROM {schema_name}.{table_name}"
         logging.info("Fetching data from %s.%s ...", schema_name, table_name)
