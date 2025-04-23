@@ -28,7 +28,7 @@ default_args = {
 
 with DAG(
     dag_id="raw_to_lookup_dag",
-    description="DAG to create date lookup table cdm.date_lookup",
+    description="DAG to create date lookup table cdm.ipo_fibonacci_dates",
     default_args=default_args,
     start_date=pendulum.today('UTC').subtract(days=1),
     catchup=False,
@@ -63,12 +63,12 @@ with DAG(
     }
 
     # Task to execute the ETL script
-    create_cdm_date_lookup_table = BashOperator(
-        task_id='create_cdm_date_lookup_table',
+    create_cdm_ipo_fibonacci_dates_table = BashOperator(
+        task_id='create_cdm_ipo_fibonacci_dates_table',
         bash_command=(
             'echo "DB_CONNECTION_STRING: $DB_CONNECTION_STRING"; '
             'echo "ENV: $ENV"; '  # Print the ENV variable
-            '/Users/kevin/.pyenv/shims/python3 /Users/kevin/Dropbox/applications/ELT/python/src/dev/cdm/raw_to_lookup_etl.py'
+            '/Users/kevin/.pyenv/shims/python3 /Users/kevin/Dropbox/applications/ELT/python/src/dev/cdm/lookup_since_ipo.py'
         ),
         env=env_vars,
     )   
@@ -80,4 +80,4 @@ with DAG(
     )
 
     # Set task dependencies
-    log_env >> log_db_connection_string >> test_connection >> create_cdm_date_lookup_table >> cdm_company_cagr_model
+    log_env >> log_db_connection_string >> test_connection >> create_cdm_ipo_fibonacci_dates_table >> cdm_company_cagr_model

@@ -36,7 +36,7 @@ def get_dbt_bash_command(env: str) -> Tuple[str, Dict[str, str]]:
             f'export DB_DATABASE={Variable.get("DB_DATABASE", default_var="da909ge4nntude")} && '
             "cd /app/dbt/src/app && "
             "/app/.heroku/python/bin/dbt debug --profiles-dir /app/.dbt --project-dir /app/dbt/src/app && "
-            "/app/.heroku/python/bin/dbt run --profiles-dir /app/.dbt --project-dir /app/dbt/src/app --models quarter_lookup"
+            "/app/.heroku/python/bin/dbt run --profiles-dir /app/.dbt --project-dir /app/dbt/src/app --models lookup_quarter_gspc_gspc"
         )
 
     else:  # Local execution
@@ -56,7 +56,7 @@ def get_dbt_bash_command(env: str) -> Tuple[str, Dict[str, str]]:
             'echo "DB_NAME: $DB_DATABASE" && '
             'echo "DB_DATABASE: $DB_DATABASE" && '
             'cd /Users/kevin/repos/ELT_private/dbt/src/app && '
-            '/Users/kevin/.pyenv/shims/dbt run --models quarter_lookup || true'
+            '/Users/kevin/.pyenv/shims/dbt run --models lookup_quarter_gspc || true'
         )
 
     return bash_command, env_vars
@@ -76,8 +76,8 @@ default_args = {
 }
 
 with DAG(
-    dag_id="cdm_quarter_lookup_dag",
-    description="DAG for creating cdm.quarter_lookup",
+    dag_id="cdm_lookup_quarter_gspc",
+    description="DAG for creating cdm.lookup_quarter_gspc",
     default_args=default_args,
     start_date=pendulum.today("UTC").subtract(days=1),
     catchup=False,
@@ -88,14 +88,14 @@ with DAG(
 
     # Run dbt model
     dbt_run = BashOperator(
-        task_id="dbt_run_model_quarter_lookup",
+        task_id="dbt_run_model_lookup_quarter_gspc",
         bash_command=bash_command,
         env=env_vars,
     )
     # Task to trigger the next DAG for creating the lookup table
     metrics_dividend_likelihood_model = TriggerDagRunOperator(
         task_id='trigger_dag_metrics_dividend_likelihood_model',
-        trigger_dag_id="metrics_dividend_likelihood_dag",  # ID of the DAG to trigger
+        trigger_dag_id="metrics_dividend_likelihood",  # ID of the DAG to trigger
         dag=dag,
     )
 
