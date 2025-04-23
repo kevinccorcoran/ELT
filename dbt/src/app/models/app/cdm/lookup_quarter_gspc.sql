@@ -16,7 +16,7 @@ with base_table as (
     dividends,
     date_trunc('quarter', "date") as quarter_start
   from
-    {{ source('raw', 'api_data_ingestion') }}
+    {{ source('cdm', 'api_data_ingestion') }}
   where
     ticker = '^GSPC'
 ),
