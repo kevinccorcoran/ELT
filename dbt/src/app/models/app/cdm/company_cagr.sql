@@ -25,7 +25,7 @@ filtered_fibonacci_dates AS (
         date,
         row_number
     FROM
-        {{ source('cdm', 'date_lookup') }}
+        {{ source('cdm', 'lookup_since_ipo') }}
     WHERE
         row_number < 34
 ),

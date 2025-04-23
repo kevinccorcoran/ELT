@@ -5,4 +5,4 @@ sources:
     database: "{{ env_var('ENV') }}"  # Dynamically set based on environment
     schema: cdm
     tables:
-      - name: date_lookup
+      - name: lookup_since_ipo

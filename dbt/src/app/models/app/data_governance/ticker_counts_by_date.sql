@@ -26,12 +26,12 @@ api_data_ingestion as (
     order by
         date desc
 ), 
-date_lookup as (
+lookup_since_ipo as (
     SELECT
         current_date AS "date",          
-        COUNT(DISTINCT ticker) AS "cdm_date_lookup" 
+        COUNT(DISTINCT ticker) AS "cdm_lookup_since_ipo" 
     FROM
-        {{ source('cdm', 'date_lookup') }}
+        {{ source('cdm', 'lookup_since_ipo') }}
 ), 
 company_cagr as (
     SELECT
@@ -44,7 +44,7 @@ select
     ardi.date,
     "raw_api_data_ingestion",
     "cdm_api_data_ingestion",
-    "cdm_date_lookup",
+    "cdm_lookup_since_ipo",
     "cdm_company_cagr" 
 from
     api_data_ingestion ardi
@@ -52,7 +52,7 @@ left join
     api_data_ingestion acdi
     on ardi.date::date = acdi.date::date
 left join 
-    date_lookup dl
+    lookup_since_ipo dl
     on ardi.date = dl.date
 left join 
     company_cagr cc
