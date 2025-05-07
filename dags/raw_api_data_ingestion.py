@@ -36,11 +36,6 @@ def get_bash_command(env: str, db_connection_string: str) -> Tuple[str, Dict[str
     Generate the Bash command and environment variables dynamically based on the environment.
     """
     if env == "heroku_postgres":
-        # bash_command = (
-        #     f'export PYTHONPATH=$PYTHONPATH:/app/python/src && '
-        #     f'/app/.heroku/python/bin/python3 /app/python/src/dev/raw/yfinance_to_raw_etl.py '
-        #     f'--start_date "{{ macros.ds_add(ds, -1) }}" --end_date "{{ ds }}"'
-        # )
         bash_command = (
         f'export PYTHONPATH=$PYTHONPATH:/app/python/src && '
         f'/app/.heroku/python/bin/python3 /app/python/src/dev/raw/yfinance_to_raw_etl.py '
