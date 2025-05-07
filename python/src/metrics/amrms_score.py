@@ -15,6 +15,39 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(
 
 POSITIVE_MOVE_THRESHOLD = 0.001
 
+def apply_rolling_metrics(df: pl.DataFrame, horizons: list[int]) -> pl.DataFrame:
+    results = []
+
+    for ticker in df["ticker"].unique():
+        group_df = df.filter(pl.col("ticker") == ticker).sort("date")
+
+        for h in horizons:
+            group_df = group_df.with_columns([
+                (pl.col("log_ret")
+                 .map_elements(lambda x: max(x - POSITIVE_MOVE_THRESHOLD, 0.0), return_dtype=pl.Float64)
+                 .rolling_sum(h)
+                 .alias(f"pos_sum_{h}")),
+                (pl.col("log_ret")
+                 .gt(POSITIVE_MOVE_THRESHOLD)
+                 .cast(pl.Float64)
+                 .rolling_mean(h)
+                 .alias(f"up_move_ratio_{h}"))
+            ])
+
+        group_df = group_df.with_columns(
+            (pl.when(pl.col("log_ret") < 0)
+               .then(pl.col("log_ret") ** 2)
+               .otherwise(None)
+             ).rolling_mean(30)
+              .sqrt()
+              .alias("downside_std")
+        )
+
+        results.append(group_df)
+
+    return pl.concat(results)
+
+
 def calculate_amrms():
     connection_string = os.getenv("DATABASE_URL")
     if not connection_string:
@@ -29,9 +62,8 @@ def calculate_amrms():
         schema_name="cdm",
         connection_string=connection_string
     )
-    df = pl.DataFrame(df)
+    df = pl.DataFrame(df).sort(["ticker", "date"])
 
-    df = df.filter(pl.col("ticker") == "AAPL").sort("date")
     df = df.with_columns(
         (pl.col("adj_close") / pl.col("adj_close").shift(1)).log().alias("log_ret")
     ).filter(
@@ -39,29 +71,10 @@ def calculate_amrms():
     )
 
     horizons = [21, 63, 126, 252]
-    for h in horizons:
-        df = df.with_columns([
-            (pl.col("log_ret")
-             .map_elements(lambda x: max(x - POSITIVE_MOVE_THRESHOLD, 0), return_dtype=pl.Float64)
-             .rolling_sum(window_size=h)
-            ).alias(f"pos_sum_{h}"),
-            ((pl.col("log_ret") > POSITIVE_MOVE_THRESHOLD)
-             .cast(pl.Float64)
-             .rolling_mean(window_size=h)
-            ).alias(f"up_move_ratio_{h}")
-        ])
+    df = apply_rolling_metrics(df, horizons)
 
-    df = df.with_columns(
-        ((pl.when(pl.col("log_ret") < 0)
-          .then(pl.col("log_ret") ** 2)
-          .otherwise(None))
-         .rolling_mean(window_size=30)
-         .sqrt()
-        ).alias("downside_std")
-    )
-
-    # ⬇️ fix: use with_row_index instead of with_row_count
-    df = df.with_row_index(name="row_nr").filter(pl.col("row_nr") >= 252)
+    # ✅ Drop rows where long-term rolling metrics are still null
+    df = df.filter(pl.col("up_move_ratio_252").is_not_null())
 
     entries = []
     for row in df.iter_rows(named=True):
@@ -70,7 +83,7 @@ def calculate_amrms():
 
         downside_std = row["downside_std"] if row["downside_std"] not in [None, np.nan] else 1.0
         entry = {
-            "ticker": "AAPL",
+            "ticker": row["ticker"],
             "date": row["date"],
             "downside_std": downside_std
         }
@@ -83,6 +96,7 @@ def calculate_amrms():
             else:
                 entropy = 0.0
             entry[f"pos_sum_{h}"] = pos_sum
+            entry[f"up_move_ratio_{h}"] = up_ratio
             entry[f"entropy_{h}"] = entropy
 
         entries.append(entry)
@@ -109,13 +123,13 @@ def calculate_amrms():
         weighted_sum = component if weighted_sum is None else weighted_sum + component
 
     results_df = results_df.with_columns(
-        # ⬇️ fix: use clip(lower_bound=0.01)
         (weighted_sum / (pl.col("downside_std").clip(lower_bound=0.01))).alias("amrms_score")
     )
 
     results_df = results_df.with_columns([
         pl.col("date").cast(pl.Date),
-        pl.col("amrms_score").cast(pl.Float64)
+        pl.col("amrms_score").cast(pl.Float64),
+        (pl.col("ticker") + "_" + pl.col("date").cast(pl.Utf8)).alias("ticker_date_id")
     ])
 
     try:
@@ -127,20 +141,23 @@ def calculate_amrms():
         conn.close()
 
         if results_df.height > 0:
+            df_to_save = results_df.to_pandas()
+            df_to_save["date"] = df_to_save["date"].dt.date  # ✅ Ensure Python date
             save_to_database(
-                results_df.select(["ticker", "date", "amrms_score"]),
+                df_to_save,
                 table_name="amrms_score",
                 schema_name="metrics",
                 connection_string=connection_string
             )
 
-        logging.info("AMRMS Score for AAPL saved successfully.")
+        logging.info("AMRMS scores saved successfully.")
 
     except Exception as e:
         logging.error(f"Unexpected error occurred: {e}")
         sys.exit(1)
 
     return results_df
+
 
 if __name__ == "__main__":
     result = calculate_amrms()
