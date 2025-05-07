@@ -3,7 +3,7 @@ import logging
 from pytest_tests.utilities.database_utils import Database
 #from pytest_tests 
 #import send_telegram_message
-from pytest_tests.send_telegram_message import send_telegram_message
+from tests.utilities.send_telegram_message import send_telegram_message
 
 
 # Initialize logging

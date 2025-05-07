@@ -5,7 +5,7 @@ import pytest
 sys.path.append('/Users/kevin/Dropbox/applications/ELT')
 
 from pytest_tests.tests.stats.crypo_main_clean.stats_test_01 import test_ticker_count as test_ticker_count_1
-from pytest_tests.send_telegram_message import send_telegram_message
+from tests.utilities.send_telegram_message import send_telegram_message
 
 def run_all_tests():
     """Run all test functions and handle any assertion errors."""

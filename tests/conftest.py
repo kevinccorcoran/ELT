@@ -1,5 +1,5 @@
 import pytest
-from .send_telegram_message import send_telegram_message
+from .utilities.send_telegram_message import send_telegram_message
 
 # Define constants for the Telegram bot
 CHAT_ID = "TELEGRAM_CHAT_ID"
