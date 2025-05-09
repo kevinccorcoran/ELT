@@ -1,47 +1,82 @@
-Overview
-This project is a full-stack ELT platform designed for analyzing publicly traded companies. It uses:
+# ELT Platform for Public-Company Analytics
 
-Apache Airflow for orchestrating and scheduling data workflows
+A full-stack ELT platform that  
 
-dbt for SQL-based data modeling and transformation
+* **pulls data** from APIs and third-party sources  
+* **transforms** it with dbt and Python/Polars  
+* **deploys** cleanly in both local and production environments  
 
-Polars + Python for high-performance analytics and data engineering
+Delivers metrics such as **Compound Annual Growth Rate (CAGR)** and a custom **Adjusted Momentum / Risk-Managed Score (AMRMS)**.
 
-It’s built for flexibility, speed, and security—while supporting robust metric calculations like Compound Annual Growth Rate (CAGR) and a custom Adjusted Momentum / Risk-Managed Score (AMRMS).
+---
 
-Recent Additions
-💡 Fibonacci-based modeling logic and AMRMS scoring
+## Tech Stack
 
-⚡ Polars migration for faster processing and efficient PostgreSQL batch inserts
+| Layer | Tooling | Purpose |
+|-------|---------|---------|
+| **Orchestration** | **Apache Airflow** | Schedule & monitor DAGs |
+| **Modeling** | **dbt v1.7** | SQL-based transformations |
+| **Analytics** | **Polars + Python** | High-performance data engineering |
+| **Storage** | **PostgreSQL** | Raw, CDM, Metrics schemas |
 
-🧱 Three-tier DAG architecture: raw → cdm → metrics, with clean schema separation for environments (staging, dev)
+---
 
-🔐 Strong secret management using .env, GitGuardian scanning, and hardened Git history
+## Recent Additions
 
-☁️ Deployment readiness: Procfile, .python-version, and modular structure for PaaS support
+* 💡 **Fibonacci-based modeling** & AMRMS scoring  
+* ⚡ **Polars migration** → faster processing, efficient batch inserts  
+* 🧱 **Three-tier DAGs** `raw → cdm → metrics` with env-specific schemas  
+* 🔐 **Secret management**: `.env`, GitGuardian pre-commit scanning  
+* ☁️ **PaaS-ready**: `Procfile`, `.python-version`, modular folder layout  
 
-👉 Architecture diagram:
-https://github.com/user-attachments/assets/e19bc0ab-c8e9-4d53-9092-26bf746a78ff
+> **Architecture diagram →**  
+> <https://github.com/user-attachments/assets/e19bc0ab-c8e9-4d53-9092-26bf746a78ff>
 
-Key Features
-Workflow Orchestration
-Modular Airflow DAGs grouped by stage (raw, cdm, metrics), with scheduler and worker support.
+---
 
-Data Transformation
-SQL models written in dbt v1.7, using version-controlled macros.
+## Key Features
 
-Quantitative Analytics
-Calculates CAGR, momentum scores, and other analytics; Fibonacci offset logic captures temporal performance shifts.
+### Workflow Orchestration
+* Modular Airflow DAGs grouped by stage (`raw`, `cdm`, `metrics`)
+* Separate scheduler & worker setup
 
-Project Modularity
-Two repos:
+### Data Transformation
+* Version-controlled dbt models & macros
+* Clear raw/CDM/metrics schema separation
 
-ELT (this one): public code and pipelines
+### Quantitative Analytics
+* CAGR, momentum scores, Fibonacci offset logic for temporal shifts
+* Custom AMRMS metric
 
-ELT_private: API keys, proprietary logic, and dashboards
+### Project Modularity
+* **`ELT`** (this repo) – public code & pipelines  
+* **`ELT_private`** – API keys, proprietary logic, dashboards
 
-Environment Management
-.env files and Airflow Variables configure separate environments. Python version pinned to 3.11.6 via pyenv.
+### Environment Management
+* `.env` files + Airflow Variables for per-env configs  
+* Python 3.11.6 pinned via `pyenv`
 
-Security
-GitGuardian pre-commit hooks flag hardcoded credentials. .gitignore and best practices protect sensitive content.
+### Security
+* GitGuardian hooks to block hard-coded secrets  
+* `.gitignore` tuned for sensitive artifacts
+
+---
+
+## Getting Started (quick local run)
+
+```bash
+# 1. Clone and enter repo
+git clone https://github.com/kevinccorcoran/ELT.git
+cd ELT
+
+# 2. Create & activate venv
+python3.11 -m venv .venv
+source .venv/bin/activate
+
+# 3. Install dependencies
+pip install -r requirements.txt
+
+# 4. Initialize Airflow (SQLite meta DB for dev)
+airflow db init
+airflow webserver &
+airflow scheduler &
