@@ -42,14 +42,14 @@ def get_bash_command(env: str, db_connection_string: str) -> Tuple[str, Dict[str
     if env == "heroku_postgres":
         bash_command = (
             f'export PYTHONPATH=$PYTHONPATH:/app/python/src && '
-            f'/app/.heroku/python/bin/python3 /app/python/src/dev/cdm/api_data_ingestion.py '
+            f'/app/.heroku/python/bin/python3 /app/python/src/datapipeline/transform/api_data_ingestion.py '
             f'--start_date "1950-01-01" --end_date "{{{{ ds }}}}"'
         )
     else:
         bash_command = (
             'export ENV={{ var.value.ENV }} && '
             'echo "Airflow ENV: $ENV" && '
-            '/Users/kevin/.pyenv/shims/python3 /Users/kevin/repos/ELT_private/python/src/dev/cdm/api_data_ingestion.py '
+            '/Users/kevin/.pyenv/shims/python3 /Users/kevin/repos/ELT_private/src/datapipeline/transform/api_data_ingestion.py '
             '--start_date "1950-01-01" --end_date "{{ macros.ds_add(ds, 0) }}"'
         )
     
