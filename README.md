@@ -30,7 +30,7 @@ Delivers metrics such as **Compound Annual Growth Rate (CAGR)** and a custom **A
 * ☁️ **PaaS-ready**: `Procfile`, `.python-version`, modular folder layout  
 
 > **Architecture diagram →**  
-> <https://github.com/user-attachments/assets/e19bc0ab-c8e9-4d53-9092-26bf746a78ff>
+> <https://github.com/kevinccorcoran/ELT/issues/8#issue-3052410671>
 
 ---
 
