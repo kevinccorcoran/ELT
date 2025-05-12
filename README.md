@@ -35,7 +35,7 @@ Delivers metrics such as **Compound Annual Growth Rate (CAGR)** and a custom **A
 > **Data Pipeline** (🟦 Python ETL, 🟥 dbt models) →  
 > <img width="1299" alt="Data Pipeline" src="https://github.com/user-attachments/assets/1e1db2b8-088d-45f2-89c1-0874e2270ca5" />
 
-> **Local-to-Heroku Deployment Workflow** (💗 needs love)** →  
+> **Local-to-Heroku Deployment Workflow** (💗 needs love) →  
 > <img width="1111" alt="Local-to-Heroku Deployment Workflow" src="https://github.com/user-attachments/assets/8c2ce78b-5ef8-4b53-ad1a-15287a1ba45d" />
 
 ---
