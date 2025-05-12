@@ -1,4 +1,4 @@
-<img width="1204" alt="image" src="https://github.com/user-attachments/assets/87f6ee3b-d73d-4b05-b2c0-057dedd18520" /># ELT Platform for Public-Company Analytics
+# ELT Platform for Public-Company Analytics
 
 A full-stack ELT platform that  
 
@@ -30,7 +30,13 @@ Delivers metrics such as **Compound Annual Growth Rate (CAGR)** and a custom **A
 * ☁️ **PaaS-ready**: `Procfile`, `.python-version`, modular folder layout  
 
 > **Environment Diagram →**  
-<img width="1204" alt="image" src="https://github.com/user-attachments/assets/a46eaa31-838d-4907-b2e2-b0b4e4a2a95e" />
+<img width="1204" alt="image" src="https://github.com/user-attachments/assets/87f6ee3b-d73d-4b05-b2c0-057dedd18520" />
+
+> **Data Pipeline →** 
+<img width="1299" alt="image" src="https://github.com/user-attachments/assets/1e1db2b8-088d-45f2-89c1-0874e2270ca5" />
+
+> **Local-to-Heroku Deployment Workflow →** 
+<img width="1111" alt="image" src="https://github.com/user-attachments/assets/8c2ce78b-5ef8-4b53-ad1a-15287a1ba45d" />
 
 ---
 
