@@ -29,14 +29,14 @@ Delivers metrics such as **Compound Annual Growth Rate (CAGR)** and a custom **A
 * 🔐 **Secret management**: `.env`, GitGuardian pre-commit scanning  
 * ☁️ **PaaS-ready**: `Procfile`, `.python-version` 
 
-> **Environment Diagram →**  
-<img width="1204" alt="image" src="https://github.com/user-attachments/assets/87f6ee3b-d73d-4b05-b2c0-057dedd18520" />
+> **Environment Diagram** (🟩 developed components, ⬜ out of scope) →  
+> <img width="1204" alt="Environment Diagram" src="https://github.com/user-attachments/assets/87f6ee3b-d73d-4b05-b2c0-057dedd18520" />
 
-> **Data Pipeline →** 
-<img width="1299" alt="image" src="https://github.com/user-attachments/assets/1e1db2b8-088d-45f2-89c1-0874e2270ca5" />
+> **Data Pipeline** (🟦 Python ETL, 🟥 dbt models) →  
+> <img width="1299" alt="Data Pipeline" src="https://github.com/user-attachments/assets/1e1db2b8-088d-45f2-89c1-0874e2270ca5" />
 
-> **Local-to-Heroku Deployment Workflow →** 
-<img width="1111" alt="image" src="https://github.com/user-attachments/assets/8c2ce78b-5ef8-4b53-ad1a-15287a1ba45d" />
+> **Local-to-Heroku Deployment Workflow** (💗 needs love)** →  
+> <img width="1111" alt="Local-to-Heroku Deployment Workflow" src="https://github.com/user-attachments/assets/8c2ce78b-5ef8-4b53-ad1a-15287a1ba45d" />
 
 ---
 
@@ -46,19 +46,19 @@ Delivers metrics such as **Compound Annual Growth Rate (CAGR)** and a custom **A
 * Modular Airflow DAGs grouped by stage (`raw`, `cdm`, `metrics`)
 
 ### Data Transformation
-* Version-controlled dbt models
+* Version-controlled dbt models **and macros**
 * Clear raw/CDM/metrics schema separation
 
 ### Quantitative Analytics
-* R, momentum scores, and Fibonacci offset logic for temporal analysis
-* Custom AMRMS metric for comparative performance tracking
+* **CAGR**, momentum scores, and Fibonacci offset logic for temporal analysis  
+* Custom **AMRMS** metric for comparative performance tracking
 
 ### Project Modularity
 * **`ELT`** (this repo) – public code & pipelines  
 * **`ELT_private`** – API keys, proprietary logic, dashboards
 
 ### Environment Management
-* .env files (local), Heroku config vars (runtime), and Airflow Variables for per-environment configuration
+* `.env` files (local), Heroku config vars (runtime), and Airflow Variables for per-environment configuration  
 * Python 3.11.6 pinned via `pyenv`
 
 ### Security
