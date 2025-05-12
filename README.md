@@ -1,4 +1,4 @@
-# ELT Platform for Public-Company Analytics
+<img width="1204" alt="image" src="https://github.com/user-attachments/assets/87f6ee3b-d73d-4b05-b2c0-057dedd18520" /># ELT Platform for Public-Company Analytics
 
 A full-stack ELT platform that  
 
@@ -29,8 +29,8 @@ Delivers metrics such as **Compound Annual Growth Rate (CAGR)** and a custom **A
 * 🔐 **Secret management**: `.env`, GitGuardian pre-commit scanning  
 * ☁️ **PaaS-ready**: `Procfile`, `.python-version`, modular folder layout  
 
-> **Architecture diagram →**  
-> <https://github.com/kevinccorcoran/ELT/issues/8#issue-3052410671>
+> **Environment Diagram →**  
+<img width="1204" alt="image" src="https://github.com/user-attachments/assets/a46eaa31-838d-4907-b2e2-b0b4e4a2a95e" />
 
 ---
 
