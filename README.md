@@ -1,10 +1,10 @@
-# ELT Platform for Public-Company Analytics
+# ELT Platform for Data Analytics
 
 A full-stack ELT platform that  
 
 * **pulls data** from APIs and third-party sources  
 * **transforms** it with dbt and Python/Polars  
-* **deploys** cleanly in both local and production environments  
+* **deploys** cleanly in both local and runtime environments  
 
 Delivers metrics such as **Compound Annual Growth Rate (CAGR)** and a custom **Adjusted Momentum / Risk-Managed Score (AMRMS)**.
 
@@ -27,7 +27,7 @@ Delivers metrics such as **Compound Annual Growth Rate (CAGR)** and a custom **A
 * ⚡ **Polars migration** → faster processing, efficient batch inserts  
 * 🧱 **Three-tier DAGs** `raw → cdm → metrics` with env-specific schemas  
 * 🔐 **Secret management**: `.env`, GitGuardian pre-commit scanning  
-* ☁️ **PaaS-ready**: `Procfile`, `.python-version`, modular folder layout  
+* ☁️ **PaaS-ready**: `Procfile`, `.python-version` 
 
 > **Environment Diagram →**  
 <img width="1204" alt="image" src="https://github.com/user-attachments/assets/87f6ee3b-d73d-4b05-b2c0-057dedd18520" />
@@ -44,22 +44,21 @@ Delivers metrics such as **Compound Annual Growth Rate (CAGR)** and a custom **A
 
 ### Workflow Orchestration
 * Modular Airflow DAGs grouped by stage (`raw`, `cdm`, `metrics`)
-* Separate scheduler & worker setup
 
 ### Data Transformation
-* Version-controlled dbt models & macros
+* Version-controlled dbt models
 * Clear raw/CDM/metrics schema separation
 
 ### Quantitative Analytics
-* CAGR, momentum scores, Fibonacci offset logic for temporal shifts
-* Custom AMRMS metric
+* R, momentum scores, and Fibonacci offset logic for temporal analysis
+* Custom AMRMS metric for comparative performance tracking
 
 ### Project Modularity
 * **`ELT`** (this repo) – public code & pipelines  
 * **`ELT_private`** – API keys, proprietary logic, dashboards
 
 ### Environment Management
-* `.env` files + Airflow Variables for per-env configs  
+* .env files (local), Heroku config vars (runtime), and Airflow Variables for per-environment configuration
 * Python 3.11.6 pinned via `pyenv`
 
 ### Security
